@@ -1,4 +1,5 @@
-import type { AppData, Settings, Task } from './types';
+import type { Settings, Task } from './types';
+import type { AppData } from '../../data/types';
 import { addDays, formatTime, localEpoch, relativeDay, toLocalDate } from '../../core/dates';
 
 /*
@@ -36,7 +37,7 @@ export function fireTimeFor(t: Task, s: Settings): number | null {
 }
 
 function bodyFor(t: Task, data: AppData, now: number): string {
-  const list = data.lists.find((l) => l.id === t.listId);
+  const list = data.todo.lists.find((l) => l.id === t.listId);
   const today = toLocalDate(now);
   let when = '';
   if (t.dueDate) {
@@ -51,7 +52,7 @@ function bodyFor(t: Task, data: AppData, now: number): string {
 
 export function planReminders(data: AppData, now: number, max = MAX_SCHEDULED): PlannedReminder[] {
   const out: PlannedReminder[] = [];
-  for (const t of data.tasks) {
+  for (const t of data.todo.tasks) {
     const at = fireTimeFor(t, data.settings);
     if (at == null || at <= now) continue;
     const title = `${t.emoji ? t.emoji + ' ' : ''}${t.title}`;

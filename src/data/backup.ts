@@ -146,7 +146,8 @@ export function applyImport(current: AppData, plan: ImportPlan, mode: ImportMode
   } else {
     throw new DataError('Nothing to import.');
   }
-  return assignNotifIds({ ...next, meta: { ...next.meta, welcomeDone: true } });
+  const keep = { tasks: new Set(current.todo.tasks.map((t) => t.id)), habits: new Set(current.habits.habits.map((h) => h.id)) };
+  return assignNotifIds({ ...next, meta: { ...next.meta, welcomeDone: true } }, keep);
 }
 
 export type ResetWhat = 'habits' | 'tasks' | 'all';

@@ -37,9 +37,10 @@ const valid = (n: unknown): n is number => Number.isInteger(n) && (n as number) 
 /**
  * Makes every task's and habit's notifId unique (across both kinds) and in range, and moves
  * meta.nextNotifId past all of them. Run after loading, importing and merging.
- * Returns the same object when nothing needed fixing.
+ * Items listed in `keep` (your existing ones, during an import) hold on to their number when there's
+ * a clash, so only the newcomers get renumbered. Returns the same object when nothing needed fixing.
  */
-export function assignNotifIds(data: AppData): AppData {
+export function assignNotifIds(data: AppData, keep?: { tasks: Set<string>; habits: Set<string> }): AppData {
   let next = Math.max(1, valid(data.meta.nextNotifId) ? data.meta.nextNotifId : 1);
   for (const t of data.todo.tasks) if (valid(t.notifId)) next = Math.max(next, t.notifId + 1);
   for (const h of data.habits.habits) if (valid(h.notifId)) next = Math.max(next, h.notifId + 1);
@@ -56,8 +57,15 @@ export function assignNotifIds(data: AppData): AppData {
     used.add(notifId);
     return { ...item, notifId };
   };
-  const tasks = data.todo.tasks.map(fix);
-  const habits = data.habits.habits.map(fix);
+  // Kept items (tasks AND habits) claim their numbers first; everyone else fills in after.
+  const tasks = [...data.todo.tasks];
+  const habits = [...data.habits.habits];
+  const pass = (keptPass: boolean) => {
+    tasks.forEach((t, i) => !!keep?.tasks.has(t.id) === keptPass && (tasks[i] = fix(t)));
+    habits.forEach((h, i) => !!keep?.habits.has(h.id) === keptPass && (habits[i] = fix(h)));
+  };
+  pass(true);
+  pass(false);
   if (!changed) return data;
   return {
     ...data,
