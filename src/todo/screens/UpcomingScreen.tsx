@@ -1,10 +1,10 @@
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { useData } from '../../data/store';
 import { useUI } from '../../data/ui';
 import { applyFilters, prefsFor, sortTasks, upcomingView } from '../model/views';
 import { addDays, parts, relativeDay, shortDate, weekday, weekdayShort } from '../../core/dates';
-import { Header } from '../../shared/Header';
+import { TodoHeader } from '../TodoHeader';
 import { QuickAdd } from '../components/QuickAdd';
 import { TaskList } from '../components/TaskList';
 import { SortButton } from '../components/SortButton';
@@ -17,7 +17,6 @@ export function UpcomingScreen() {
   const viewPrefs = useData((s) => s.data.settings.viewPrefs);
   const openSheet = useUI((s) => s.openSheet);
   const prefs = prefsFor(viewPrefs, 'upcoming');
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const groups = useMemo(
     () =>
@@ -30,13 +29,13 @@ export function UpcomingScreen() {
   const total = groups.reduce((n, g) => n + g.tasks.length, 0);
 
   const jump = (key: string) => {
-    const el = scrollRef.current?.querySelector(`[data-day="${key}"]`) as HTMLElement | null;
-    if (el && scrollRef.current) scrollRef.current.scrollTo({ top: el.offsetTop - 70, behavior: 'smooth' });
+    const el = document.querySelector(`[data-day="${key}"]`) as HTMLElement | null;
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
-    <section className="screen">
-      <Header eyebrow={total ? `${total} task${total === 1 ? '' : 's'} coming up` : 'Next 2 weeks'} title="Upcoming" actions={<SortButton viewKey="upcoming" allowManual />} />
+    <main className="screen">
+      <TodoHeader eyebrow={total ? `${total} task${total === 1 ? '' : 's'} coming up` : 'Next 2 weeks'} actions={<SortButton viewKey="upcoming" allowManual />} />
       <div className="day-strip" role="tablist" aria-label="Jump to day">
         {groups
           .filter((g) => g.date)
@@ -57,10 +56,10 @@ export function UpcomingScreen() {
             );
           })}
       </div>
-      <div className="scroll" ref={scrollRef}>
+      <div className="scroll">
         <QuickAdd defaults={{ dueDate: addDays(today, 1) }} placeholder="Add for tomorrow…  or type “fri 4pm”" />
         {groups.map((g) => (
-          <div key={g.key} data-day={g.key} className={`day ${g.tasks.length ? '' : 'day--empty'}`}>
+          <div key={g.key} data-day={g.key} className={`up-day ${g.tasks.length ? "" : "up-day--empty"}`}>
             <div className="day-head">
               <span className="day-head__title">{g.date ? relativeDay(g.date, today) : 'Later'}</span>
               {g.date && <span className="day-head__sub">{diffLabel(g.date, today)}</span>}
@@ -78,7 +77,7 @@ export function UpcomingScreen() {
           </div>
         ))}
       </div>
-    </section>
+    </main>
   );
 }
 

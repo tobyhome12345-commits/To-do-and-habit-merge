@@ -59,8 +59,8 @@ export function SmartScreen({ view }: { view: SmartViewId }) {
     ) : null;
 
   return (
-    <section className="screen">
-      <Header back eyebrow={`${body.n} task${body.n === 1 ? '' : 's'}`} title={m.title} color={m.color} actions={<SortButton viewKey={view} allowManual={view === 'all'} showListFilter />} />
+    <main className="screen">
+      <Header back search eyebrow={`${body.n} task${body.n === 1 ? '' : 's'}`} title={m.title} color={m.color} actions={<SortButton viewKey={view} allowManual={view === 'all'} showListFilter />} />
       <div className="scroll">
         {action && <div className="section-title" style={{ marginTop: 4 }}>{action}</div>}
         {body.n === 0 && (
@@ -96,7 +96,7 @@ export function SmartScreen({ view }: { view: SmartViewId }) {
             </div>
           ))}
       </div>
-    </section>
+    </main>
   );
 }
 export default SmartScreen;

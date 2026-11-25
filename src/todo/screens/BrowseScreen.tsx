@@ -7,7 +7,7 @@ import type { List } from '../model/types';
 import { useData } from '../../data/store';
 import { useUI } from '../../data/ui';
 import { counts } from '../model/views';
-import { Header } from '../../shared/Header';
+import { TodoHeader } from '../TodoHeader';
 import { useToday } from '../../core/hooks';
 import { haptic } from '../../core/haptics';
 import { dragState } from '../actions';
@@ -47,8 +47,8 @@ export function BrowseScreen() {
   };
 
   return (
-    <section className="screen">
-      <Header title="Lists" />
+    <main className="screen">
+      <TodoHeader eyebrow="Smart views & lists" />
       <div className="scroll">
         <div className="smart-grid">
           {cards.map(({ id, label, n, Icon, color, go }) => (
@@ -79,7 +79,7 @@ export function BrowseScreen() {
         </DndContext>
         <p className="hint">Long-press a list to drag it into a new order.</p>
       </div>
-    </section>
+    </main>
   );
 }
 

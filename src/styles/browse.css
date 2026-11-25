@@ -350,17 +350,17 @@
   background: var(--accent-softer);
 }
 
-.day--empty .day-head {
+.up-day--empty .day-head {
   margin-top: 12px;
   margin-bottom: 0;
 }
 
-.day--empty .day-head__title {
+.up-day--empty .day-head__title {
   color: var(--text-2);
   font-size: 15px;
 }
 
-.day--empty .day-empty {
+.up-day--empty .day-empty {
   display: none;
 }
 
@@ -480,4 +480,9 @@
   background: var(--accent-softer);
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* Upcoming day groups (renamed from .day so they never pick up the habit calendar's day cells) */
+.up-day {
+  scroll-margin-top: calc(var(--safe-top) + 12px);
 }

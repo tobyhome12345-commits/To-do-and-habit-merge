@@ -34,7 +34,7 @@ export function SearchScreen() {
   }, [active, tasks, q, filters, today, sort, lists]);
 
   return (
-    <section className="screen">
+    <main className="screen">
       <div className="search-head">
         <button className="icon-btn" aria-label="Back" onClick={pop}>
           <ChevronLeft size={26} />
@@ -85,7 +85,7 @@ export function SearchScreen() {
           </>
         )}
       </div>
-    </section>
+    </main>
   );
 }
 export default SearchScreen;

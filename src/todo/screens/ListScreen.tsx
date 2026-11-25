@@ -36,9 +36,10 @@ export function ListScreen({ listId }: { listId: ID }) {
   if (!list) return null;
 
   return (
-    <section className="screen" style={{ ['--list' as string]: list.color }}>
+    <main className="screen" style={{ ['--list' as string]: list.color }}>
       <Header
         back
+        search
         eyebrow={`${open.length} open${done.length ? ` · ${done.length} done` : ''}`}
         title={
           <>
@@ -82,7 +83,7 @@ export function ListScreen({ listId }: { listId: ID }) {
           </>
         )}
       </div>
-    </section>
+    </main>
   );
 }
 export default ListScreen;

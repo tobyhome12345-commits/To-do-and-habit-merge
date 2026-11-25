@@ -8,7 +8,7 @@ import { SnackHost } from './shared/SnackHost';
 import { SheetHost } from './shared/SheetHost';
 import { TodayScreen } from './today/TodayScreen';
 import { HabitsSection } from './habits/HabitsSection';
-import { TodoSection } from './todo/TodoSection';
+import { Fab, TodoSection } from './todo/TodoSection';
 import { MilestoneLayer } from './habits/components/MilestoneLayer';
 
 const SettingsScreen = lazy(() => import('./settings/SettingsScreen'));
@@ -48,6 +48,8 @@ export function App() {
       ) : (
         <TodoSection />
       )}
+      {top?.kind === 'list' && <Fab draft={{ listId: top.listId }} />}
+      {top?.kind === 'smart' && <Fab draft={{}} />}
       <SnackHost />
       {top?.kind !== 'settings' && <TabBar badges={{ todo: c.today + c.overdue }} />}
       <SheetHost />

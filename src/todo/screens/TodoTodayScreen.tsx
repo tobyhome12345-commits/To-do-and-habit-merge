@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useData } from '../../data/store';
-import { Header } from '../../shared/Header';
+import { TodoHeader } from '../TodoHeader';
 import { QuickAdd } from '../components/QuickAdd';
 import { TaskList } from '../components/TaskList';
 import { EmptyState } from '../../shared/EmptyState';
@@ -9,7 +9,8 @@ import { applyFilters, prefsFor, sortTasks, todayView } from '../model/views';
 import { longDate, toLocalDate } from '../../core/dates';
 import { useToday } from '../../core/hooks';
 
-export function TodayScreen() {
+/** To-Do → Today (Doable's Today screen). */
+export function TodoTodayScreen() {
   const today = useToday();
   const tasks = useData((s) => s.data.todo.tasks);
   const lists = useData((s) => s.data.todo.lists);
@@ -32,8 +33,8 @@ export function TodayScreen() {
   const C = 2 * Math.PI * 19;
 
   return (
-    <section className="screen">
-      <Header eyebrow={longDate(today)} title="Today" actions={<SortButton viewKey="today" allowManual />} />
+    <main className="screen">
+      <TodoHeader eyebrow={longDate(today)} actions={<SortButton viewKey="today" allowManual />} />
       <div className="scroll">
         <QuickAdd defaults={{ dueDate: today }} placeholder="Add to today…  try “Gym 6pm !high”" />
 
@@ -91,6 +92,6 @@ export function TodayScreen() {
           />
         )}
       </div>
-    </section>
+    </main>
   );
 }
