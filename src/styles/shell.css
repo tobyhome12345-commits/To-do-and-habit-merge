@@ -161,6 +161,14 @@ body.sheet-open {
   background: var(--accent-soft);
 }
 
+/* ---------- Chips ----------
+   The to-do chips hide a real <input> (date picker, colour…) stretched over the chip, so the chip must be
+   the positioning box. Without this the invisible input covered the whole task sheet and blocked scrolling. */
+.chip {
+  --chip: var(--accent);
+  position: relative;
+}
+
 /* ---------- Buttons (to-do names → Garden buttons) ---------- */
 .btn--primary {
   background: var(--primary);
