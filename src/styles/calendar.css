@@ -1,0 +1,340 @@
+.habit-filter {
+  margin: 0 -16px 14px;
+  padding: 2px 16px;
+}
+
+/* ---------- Month ---------- */
+.month-card {
+  padding: 10px 10px 14px;
+}
+
+.month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.month-head .icon-btn:disabled {
+  opacity: 0.3;
+}
+
+.month-title {
+  text-align: center;
+}
+
+.month-title h2 {
+  font-size: 18px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.month-title p {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 6px;
+}
+
+.month-letter {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-3);
+  padding: 4px 0 2px;
+}
+
+.day {
+  height: 44px;
+  position: relative;
+  display: block;
+}
+
+.day-fill {
+  position: absolute;
+  inset: 2px 4px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: transparent;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.day-fill.jl {
+  left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.day-fill.jr {
+  right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.day:active .day-fill {
+  transform: scale(0.92);
+}
+
+.day.today .day-fill {
+  box-shadow: inset 0 0 0 2px var(--text);
+}
+
+.day.picked .day-fill {
+  box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 2px var(--accent-soft);
+}
+
+.day.future .day-fill {
+  color: var(--text-3);
+  opacity: 0.45;
+}
+
+.month-foot {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 10px;
+}
+
+/* ---------- Day detail ---------- */
+.day-detail {
+  margin-top: 14px;
+  padding: 14px 8px 8px;
+}
+
+.day-detail h3,
+.heat-head h3 {
+  font-size: 16px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.day-detail h3 {
+  padding: 0 8px 6px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.detail-row.quiet .emoji-bubble,
+.detail-row.quiet .detail-name {
+  opacity: 0.55;
+}
+
+.detail-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.detail-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+.detail-note {
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-note.has {
+  color: var(--text-2);
+  font-style: italic;
+  font-weight: 600;
+}
+
+.detail-note svg {
+  flex-shrink: 0;
+}
+
+.mini-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+
+.mini-stepper button {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+}
+
+.mini-stepper button:disabled {
+  opacity: 0.3;
+}
+
+.mini-stepper b {
+  min-width: 40px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.emoji-bubble.sm {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 20px;
+}
+
+.detail-name {
+  max-width: 100%;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-check {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2.5px solid var(--surface-3);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* ---------- Heatmap ---------- */
+.heat-card {
+  margin-top: 14px;
+  padding: 14px 14px 12px;
+}
+
+.heat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.heat-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: var(--heat-empty);
+}
+
+.heat-legend i:first-of-type {
+  margin-left: 3px;
+}
+
+.heat-legend i:last-of-type {
+  margin-right: 3px;
+}
+
+.heat-months {
+  display: grid;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  height: 16px;
+  margin-bottom: 2px;
+}
+
+.heat-months span {
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+.heat-grid {
+  display: grid;
+  grid-template-rows: repeat(7, auto);
+  grid-auto-flow: column;
+  gap: 3px;
+}
+
+.heat-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--heat-empty);
+  transition: transform 0.1s ease;
+}
+
+.heat-cell.future {
+  background: transparent;
+}
+
+.heat-cell.picked {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+.heat-readout {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: center;
+  min-height: 18px;
+}
+
+/* Day states (single habit) */
+.day.s-skip .day-fill {
+  color: var(--text-3);
+  opacity: 0.55;
+}
+
+.day.s-off .day-fill {
+  box-shadow: inset 0 0 0 1.5px var(--surface-3);
+  outline: 1.5px dashed var(--text-3);
+  outline-offset: -3px;
+  color: var(--text-3);
+}
+
+.note-dot {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--coral);
+  box-shadow: 0 0 0 2px var(--surface);
+}

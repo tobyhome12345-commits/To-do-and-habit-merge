@@ -1,0 +1,305 @@
+.period-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0 10px;
+}
+
+.period-nav .icon-btn:disabled {
+  opacity: 0.3;
+}
+
+.period-title {
+  text-align: center;
+}
+
+.period-title h2 {
+  font-size: 18px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.period-title p {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* ---------- Stat tiles ---------- */
+.tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tile {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tile-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.tile-value {
+  font-size: 30px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.tile-sub,
+.tile-delta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tile-delta.up {
+  color: #059669;
+}
+
+.tile-delta.down {
+  color: var(--danger);
+}
+
+:root[data-theme='dark'] .tile-delta.up {
+  color: #34d399;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .tile-delta.up {
+    color: #34d399;
+  }
+}
+
+/* ---------- Bar chart ---------- */
+.chart-card {
+  margin-top: 14px;
+  padding: 14px 14px 12px;
+}
+
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.chart-head h3 {
+  font-size: 16px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.chart-head span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.chart {
+  display: flex;
+  gap: 8px;
+  height: 150px;
+}
+
+.chart-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-align: right;
+  width: 32px;
+  font-variant-numeric: tabular-nums;
+  margin: -7px 0;
+}
+
+.chart-plot {
+  position: relative;
+  flex: 1;
+}
+
+.chart-grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.chart-grid i {
+  display: block;
+  height: 1px;
+  background: var(--border);
+}
+
+.chart-grid i:last-child {
+  background: var(--surface-3);
+}
+
+.chart-bars {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+
+.bar-slot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  padding: 0 1px;
+}
+
+.bar {
+  display: block;
+  width: 100%;
+  max-width: 24px;
+  background: var(--leaf);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.4s cubic-bezier(0.3, 1.1, 0.5, 1), opacity 0.15s ease;
+}
+
+.chart-bars:has(.picked) .bar-slot:not(.picked) .bar {
+  opacity: 0.45;
+}
+
+.chart-x {
+  display: grid;
+  margin: 6px 0 0 40px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-x span {
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.chart-x .today {
+  color: var(--text);
+  font-weight: 800;
+}
+
+/* ---------- Per-habit ---------- */
+.habit-stats {
+  padding: 6px 14px;
+}
+
+.hs-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.hs-row + .hs-row {
+  border-top: 1px solid var(--border);
+}
+
+.hs-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.hs-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hs-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hs-pct {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.meter {
+  height: 8px;
+  border-radius: 4px;
+  margin: 6px 0;
+  overflow: hidden;
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.3, 1.1, 0.5, 1);
+}
+
+.hs-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+/* ---------- Tick's take ---------- */
+.tick-take {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 16px 10px 10px;
+  background:
+    radial-gradient(80% 140% at 0% 50%, var(--sun-soft), transparent 70%),
+    var(--surface);
+}
+
+.tick-take p {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+.tick-take b {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.hs-name small {
+  margin-left: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-3);
+}
