@@ -104,7 +104,14 @@ jobs:
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/sim \
             CODE_SIGNING_ALLOWED=NO -quiet build
-          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          # An iPhone 14 Pro (the phone Doable is going on), on the newest iOS; any iPhone if that fails.
+          RUNTIME=$(xcrun simctl list runtimes available -j | python3 -c '
+          import json, sys
+          rs = [r for r in json.load(sys.stdin)["runtimes"] if r["name"].startswith("iOS")]
+          rs.sort(key=lambda r: [int(p) for p in r["version"].split(".")])
+          print(rs[-1]["identifier"])
+          ')
+          UDID=$(xcrun simctl create "Doable iPhone 14 Pro" com.apple.CoreSimulator.SimDeviceType.iPhone-14-Pro "$RUNTIME" 2>/dev/null) || UDID=$(xcrun simctl list devices available -j | python3 -c '
           import json, sys
           devs = json.load(sys.stdin)["devices"]
           for runtime in sorted((k for k in devs if "iOS" in k), reverse=True):
