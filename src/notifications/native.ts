@@ -219,8 +219,8 @@ export async function sendTestNotification(): Promise<boolean> {
   const iconColor = useData.getState().data.settings.accent ?? '#F5A524';
   await LocalNotifications.schedule({
     notifications: [
-      { id: TEST_TASK_ID, title: '✅ Tickday test: task reminder', body: 'Task reminders are working! This is what they look like.', schedule: at(5), isExactNotification: exact, channelId: CHANNEL.task, smallIcon: SMALL_ICON, iconColor } as LocalNotificationSchema,
-      { id: TEST_HABIT_ID, title: '🌱 Tickday test: habit reminder', body: 'Tick says hi! Habit reminders are working too ✓', schedule: at(7), isExactNotification: exact, channelId: CHANNEL.habit, smallIcon: SMALL_ICON, iconColor } as LocalNotificationSchema,
+      { id: TEST_TASK_ID, title: '✅ Doable test: task reminder', body: 'Task reminders are working! This is what they look like.', schedule: at(5), isExactNotification: exact, channelId: CHANNEL.task, smallIcon: SMALL_ICON, iconColor } as LocalNotificationSchema,
+      { id: TEST_HABIT_ID, title: '🌱 Doable test: habit reminder', body: 'Tick says hi! Habit reminders are working too ✓', schedule: at(7), isExactNotification: exact, channelId: CHANNEL.habit, smallIcon: SMALL_ICON, iconColor } as LocalNotificationSchema,
     ],
   });
   return true;

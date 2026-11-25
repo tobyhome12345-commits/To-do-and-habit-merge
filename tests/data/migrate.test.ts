@@ -4,7 +4,7 @@ import { DataError, detect, migrate, normalizeAppData, upgrade } from '../../src
 import { DATA_VERSION } from '../../src/data/types';
 import { doableBackup, habitBackupV1, habitBackupV2 } from './fixtures';
 
-describe('Tickday document', () => {
+describe('Doable document', () => {
   it('a fresh document survives save → load unchanged', () => {
     const d = defaultData(1000);
     expect(normalizeAppData(JSON.parse(JSON.stringify(d)))).toEqual(d);
@@ -13,9 +13,9 @@ describe('Tickday document', () => {
     expect(d.todo.lists.map((l) => l.name)).toEqual(['Inbox', 'Home', 'School', 'Personal']);
   });
 
-  it('upgrades step by step and refuses files from a newer Tickday', () => {
+  it('upgrades step by step and refuses files from a newer Doable', () => {
     expect(upgrade({ version: 0, a: 1 })).toEqual({ version: DATA_VERSION, a: 1 });
-    expect(() => upgrade({ version: DATA_VERSION + 1 })).toThrow(/newer version of Tickday/);
+    expect(() => upgrade({ version: DATA_VERSION + 1 })).toThrow(/newer version of Doable/);
   });
 
   it('repairs bad settings and keeps the two halves separate', () => {
@@ -30,9 +30,9 @@ describe('Tickday document', () => {
 });
 
 describe('recognising backup files', () => {
-  it('reads a Doable backup as the task half only', () => {
+  it('reads an old to-do (Doable v1) backup as the task half only', () => {
     const r = detect(doableBackup);
-    expect(r.kind).toBe('doable');
+    expect(r.kind).toBe('doable-v1');
     expect(r.habits).toBeUndefined();
     expect(r.todo!.tasks.map((t) => t.id)).toEqual(['d1', 'd2', 'd3']);
     expect(r.todo!.tasks[0].subtasks).toEqual([{ id: 's1', title: 'Buy clay', done: true }]);
@@ -40,8 +40,8 @@ describe('recognising backup files', () => {
     expect(r.todoSettings!.viewPrefs.today.sort).toBe('priority');
   });
 
-  it('reads bare Doable data too', () => {
-    expect(detect(doableBackup.data).kind).toBe('doable');
+  it('reads bare old to-do data too', () => {
+    expect(detect(doableBackup.data).kind).toBe('doable-v1');
   });
 
   it('reads a Habit Tracker v2 backup as the habit half only', () => {
@@ -81,9 +81,10 @@ describe('recognising backup files', () => {
 
   it('rejects junk with friendly messages', () => {
     expect(() => detect('hello')).toThrow(DataError);
-    expect(() => detect({ hello: 1 })).toThrow(/Tickday, Habit Tracker or Doable/);
+    expect(() => detect({ hello: 1 })).toThrow(/Doable or Habit Tracker/);
     expect(() => detect({ app: 'Doable', data: { schemaVersion: 99, tasks: [], lists: [] } })).toThrow(/newer version/);
-    expect(() => detect({ app: 'Tickday', data: { version: 99, habits: {}, todo: {} } })).toThrow(/newer version of Tickday/);
+    expect(() => detect({ app: 'Doable', format: 2, data: { version: 99, habits: {}, todo: {} } })).toThrow(/newer version of Doable/);
+    expect(() => detect({ app: 'Tickday', data: { version: 99, habits: {}, todo: {} } })).toThrow(/newer version of Doable/);
   });
 
   it('loading old single-app data wraps it into a full document with unique notification ids', () => {

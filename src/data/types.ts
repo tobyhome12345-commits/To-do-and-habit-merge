@@ -3,7 +3,7 @@ import type { Completions, DateRange, Habit, Notes } from '../habits/lib/types';
 import type { List, Task, ViewPrefs } from '../todo/model/types';
 
 /*
- * Tickday's ONE saved document. Habits and tasks live side by side but separately;
+ * Doable's ONE saved document. Habits and tasks live side by side but separately;
  * settings are shared. `version` is bumped whenever the shape changes, and data/migrate.ts
  * upgrades older documents step by step (and also reads the two old apps' backups).
  */

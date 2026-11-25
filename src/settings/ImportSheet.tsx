@@ -7,9 +7,9 @@ import { kv, PRE_IMPORT, saveNow } from '../data/persistence';
 import { Sheet } from '../shared/Sheet';
 import { haptic } from '../core/haptics';
 
-const ART: Record<ImportPlan['kind'], string> = { tickday: '📦', 'habit-tracker': '🌱', doable: '✅' };
+const ART: Record<ImportPlan['kind'], string> = { doable: '📦', 'habit-tracker': '🌱', 'doable-v1': '✅' };
 
-/** Import a Tickday, Habit Tracker or Doable backup: merge with what you have, or replace it. */
+/** Import a Doable, Habit Tracker or old to-do backup: merge with what you have, or replace it. */
 export default function ImportSheet({ plan }: { plan: ImportPlan }) {
   const closeSheet = useUI((s) => s.closeSheet);
   const replaceData = useData((s) => s.replaceData);
@@ -17,10 +17,10 @@ export default function ImportSheet({ plan }: { plan: ImportPlan }) {
   const [busy, setBusy] = useState(false);
   const { stats, kind } = plan;
   const when = plan.exportedAt ? new Date(plan.exportedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : null;
-  const what = kind === 'habit-tracker' ? 'habits' : kind === 'doable' ? 'tasks' : 'everything';
+  const what = kind === 'habit-tracker' ? 'habits' : kind === 'doable-v1' ? 'tasks' : 'everything';
 
   const parts: string[] = [];
-  if (kind !== 'doable') parts.push(`${stats.habits} habit${stats.habits === 1 ? '' : 's'}`, `${stats.checkIns} check-ins`);
+  if (kind !== 'doable-v1') parts.push(`${stats.habits} habit${stats.habits === 1 ? '' : 's'}`, `${stats.checkIns} check-ins`);
   if (kind !== 'habit-tracker') parts.push(`${stats.tasks} task${stats.tasks === 1 ? '' : 's'}`, `${stats.lists} lists`);
 
   const run = async (mode: ImportMode) => {
@@ -50,13 +50,13 @@ export default function ImportSheet({ plan }: { plan: ImportPlan }) {
         </div>
       </div>
       <p className="sheet__text">
-        {kind === 'tickday' ? (
+        {kind === 'doable' ? (
           <>
             <b>Merge</b> adds anything new and keeps the newest version of things you have in both. <b>Replace</b> swaps everything (settings too) for the backup.
           </>
         ) : (
           <>
-            This only touches your <b>{what}</b>. <b>Merge</b> keeps yours and adds the backup’s; <b>Replace</b> swaps your {what} for the backup’s. Your {kind === 'doable' ? 'habits' : 'tasks'}, theme and colours stay as they are.
+            This only touches your <b>{what}</b>. <b>Merge</b> keeps yours and adds the backup’s; <b>Replace</b> swaps your {what} for the backup’s. Your {kind === 'doable-v1' ? 'habits' : 'tasks'}, theme and colours stay as they are.
           </>
         )}{' '}
         A safety copy is kept either way (Settings → Undo last import).

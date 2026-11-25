@@ -12,7 +12,7 @@ import { REMINDER_OPTIONS } from '../todo/model/types';
 import { formatTime } from '../core/dates';
 import { isNative } from '../core/platform';
 import { exportBackup, pickBackupFile } from '../data/backupIO';
-import { PRE_IMPORT, kv, saveNow } from '../data/persistence';
+import { PRE_IMPORT, getSafetyCopy, kv, saveNow } from '../data/persistence';
 import { migrate } from '../data/migrate';
 import { getReminderStatus, openExactAlarmSettings, requestReminderPermission, sendTestNotification, type ReminderStatus } from '../notifications/native';
 import type { ThemeMode } from '../data/types';
@@ -59,7 +59,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     if (isNative) void CapApp.getInfo().then((i) => setVersion(i.version));
-    void kv.get(PRE_IMPORT).then(setSafetyCopy);
+    void getSafetyCopy().then(setSafetyCopy);
   }, [data.meta]);
 
   const nHabits = data.habits.habits.filter((h) => !h.archivedAt).length;
@@ -68,7 +68,7 @@ export default function SettingsScreen() {
 
   return (
     <main className="screen settings-page">
-      <Header back eyebrow="Tickday" title="Settings" />
+      <Header back eyebrow="Doable" title="Settings" />
 
       {/* -------- Appearance -------- */}
       <p className="section-title">🎨 Appearance</p>
@@ -131,7 +131,7 @@ export default function SettingsScreen() {
               onClick={async () => {
                 const ok = await requestReminderPermission(true);
                 refreshStatus();
-                if (!ok) showSnack('Turn them on in Android Settings → Apps → Tickday → Notifications', undefined, '⚙️');
+                if (!ok) showSnack('Turn them on in Android Settings → Apps → Doable → Notifications', undefined, '⚙️');
               }}
             >
               Allow notifications
@@ -204,7 +204,7 @@ export default function SettingsScreen() {
             }}
           />
         ) : (
-          <Row icon={<Icon tone="coral"><Smartphone size={18} /></Icon>} label="Reminders run in the Android app" sub="Real notifications at the right time, even when Tickday is closed" />
+          <Row icon={<Icon tone="coral"><Smartphone size={18} /></Icon>} label="Reminders run in the Android app" sub="Real notifications at the right time, even when Doable is closed" />
         )}
       </div>
 
@@ -236,7 +236,7 @@ export default function SettingsScreen() {
             }
           }}
         />
-        <Row icon={<Icon tone="leaf"><Download size={18} /></Icon>} label="Import backup" sub="Tickday, Habit Tracker or Doable backup files" onClick={pickBackupFile} />
+        <Row icon={<Icon tone="leaf"><Download size={18} /></Icon>} label="Import backup" sub="Doable or Habit Tracker backups (old to-do backups work too)" onClick={pickBackupFile} />
         {safetyCopy && (
           <Row
             icon={<Icon tone="ink"><History size={18} /></Icon>}
@@ -265,9 +265,9 @@ export default function SettingsScreen() {
       <div className="about">
         <Tick mood="proud" stage={4} size={56} still />
         <p>
-          <b>Tickday</b> {isNative ? `v${version}` : 'web preview'} · {nHabits} habits · {open} open tasks
+          <b>Doable</b> {isNative ? `v${version}` : 'web preview'} · {nHabits} habits · {open} open tasks
           <br />
-          Habit Tracker + Doable, cheered on by Tick ✓
+          Habits + to-dos, cheered on by Tick ✓
           <br />
           <Heart size={12} fill="currentColor" /> Free forever. No ads, no account, no subscription.
         </p>

@@ -21,7 +21,7 @@ import { TaskList } from '../todo/components/TaskList';
 import { QuickAdd } from '../todo/components/QuickAdd';
 
 /*
- * Tickday's home: today's habits and today's tasks together, with Tick cheering on the whole day.
+ * Doable's home: today's habits and today's tasks together, with Tick cheering on the whole day.
  * Habits use the Habit Tracker's cards (compact) and check-off; tasks use Doable's rows, tick animation and undo.
  */
 
@@ -36,8 +36,8 @@ function Welcome() {
         <Tick mood="happy" stage={2} size={92} label="Tick waving hello" />
       </div>
       <div className="welcome-text">
-        <h2>Welcome to Tickday!</h2>
-        <p>Your habits and to-dos, together. Moving in from Habit Tracker or Doable? Import their backups and everything comes along.</p>
+        <h2>Welcome to Doable!</h2>
+        <p>Your habits and to-dos, together. Coming from the Habit Tracker or your old to-do app? Import their backups and everything comes along.</p>
         <div className="welcome-actions">
           <button className="btn btn-primary small" onClick={pickBackupFile}>
             <Upload size={16} /> Import a backup

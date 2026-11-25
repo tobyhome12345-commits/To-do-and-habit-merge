@@ -11,10 +11,18 @@ import { useData } from './store';
  * (see data/types.ts), plus a "last good" copy for recovery.
  */
 
-const KEY = 'tickday.data';
-const PREV = 'tickday.data.prev';
+const KEY = 'doable.data';
+const PREV = 'doable.data.prev';
 /** Safety copy taken right before an import or a reset replaces anything. */
-export const PRE_IMPORT = 'tickday.data.preimport';
+export const PRE_IMPORT = 'doable.data.preimport';
+
+/**
+ * Where v1.0.1–1.0.2 (when the app was called Tickday) saved everything. Read once to move your data
+ * across on the first start after the update, and left untouched as a safety net. Never shown to you.
+ */
+export const LEGACY_KEYS = { main: 'tickday.data', prev: 'tickday.data.prev', preImport: 'tickday.data.preimport' } as const;
+
+type KV = { get(key: string): Promise<string | null>; set(key: string, value: string): Promise<void> };
 
 const native = Capacitor.isNativePlatform();
 
@@ -37,26 +45,41 @@ export const kv = {
   },
 };
 
-export async function loadData(): Promise<{ data: AppData; source: 'main' | 'backup' | 'new' }> {
-  const raw = await kv.get(KEY);
-  if (raw) {
+export async function loadData(store: KV = kv): Promise<{ data: AppData; source: 'main' | 'backup' | 'moved' | 'new' }> {
+  const tryParse = (raw: string | null) => {
+    if (!raw) return null;
     try {
-      const data = migrate(JSON.parse(raw));
-      await kv.set(PREV, raw); // remember the last copy that loaded fine
-      return { data, source: 'main' };
+      return migrate(JSON.parse(raw));
     } catch (e) {
-      console.error('main data unreadable, trying backup', e);
+      console.error('saved data unreadable', e);
+      return null;
     }
-    const prev = await kv.get(PREV);
-    if (prev) {
-      try {
-        return { data: migrate(JSON.parse(prev)), source: 'backup' };
-      } catch (e) {
-        console.error('backup unreadable too', e);
-      }
+  };
+  const raw = await store.get(KEY);
+  if (raw) {
+    const data = tryParse(raw);
+    if (data) {
+      await store.set(PREV, raw); // remember the last copy that loaded fine
+      return { data, source: 'main' };
+    }
+    const prev = tryParse(await store.get(PREV));
+    if (prev) return { data: prev, source: 'backup' };
+  } else {
+    // First start after the update from Tickday: move the data to the new key (the old copy stays).
+    const moved = tryParse(await store.get(LEGACY_KEYS.main)) ?? tryParse(await store.get(LEGACY_KEYS.prev));
+    if (moved) {
+      const json = JSON.stringify(moved);
+      await store.set(KEY, json);
+      await store.set(PREV, json);
+      return { data: moved, source: 'moved' };
     }
   }
   return { data: defaultData(), source: 'new' };
+}
+
+/** The safety copy from before the last import or reset (from before the update too). */
+export async function getSafetyCopy(store: KV = kv): Promise<string | null> {
+  return (await store.get(PRE_IMPORT)) ?? (await store.get(LEGACY_KEYS.preImport));
 }
 
 let timer: ReturnType<typeof setTimeout> | null = null;

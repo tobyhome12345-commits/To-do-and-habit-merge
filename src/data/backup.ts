@@ -7,14 +7,16 @@ import { DATA_VERSION, type AppData, type HabitData, type TodoData } from './typ
 
 /*
  * One backup file for everything:
- *   { app: 'Tickday', format: 1, version, exportedAt, appVersion, data: AppData }
- * Importing also accepts the old Habit Tracker and Doable backup files. An old single-app file only
- * touches its own half (habits OR tasks) and never changes the look (theme / accent).
+ *   { app: 'Doable', format: 2, version, exportedAt, appVersion, data: AppData }
+ * (format 2, so it can't be mistaken for the old to-do app's format-1 files.)
+ * Importing also accepts files saved while the app was called Tickday, the old to-do app's backups and
+ * Habit Tracker backups. An old single-app file only touches its own half (habits OR tasks) and never
+ * changes the look (theme / accent).
  */
 
 export interface BackupFile {
-  app: 'Tickday';
-  format: 1;
+  app: 'Doable';
+  format: 2;
   version: number;
   exportedAt: string;
   appVersion: string;
@@ -22,11 +24,11 @@ export interface BackupFile {
 }
 
 export function backupFileName(now = Date.now()) {
-  return `tickday-backup-${todayStr(now)}.json`;
+  return `doable-backup-${todayStr(now)}.json`;
 }
 
 export function exportJSON(data: AppData, now = Date.now(), appVersion = 'dev'): string {
-  const file: BackupFile = { app: 'Tickday', format: 1, version: DATA_VERSION, exportedAt: new Date(now).toISOString(), appVersion, data };
+  const file: BackupFile = { app: 'Doable', format: 2, version: DATA_VERSION, exportedAt: new Date(now).toISOString(), appVersion, data };
   return JSON.stringify(file, null, 2);
 }
 
@@ -40,14 +42,14 @@ export interface ImportStats {
 
 export interface ImportPlan {
   kind: BackupKind;
-  /** "Tickday backup", "Habit Tracker backup", "Doable backup" */
+  /** "Doable backup", "Habit Tracker backup", "Old to-do backup" */
   label: string;
   exportedAt?: string;
   detected: Detected;
   stats: ImportStats;
 }
 
-const LABEL: Record<BackupKind, string> = { tickday: 'Tickday backup', doable: 'Doable backup', 'habit-tracker': 'Habit Tracker backup' };
+const LABEL: Record<BackupKind, string> = { doable: 'Doable backup', 'doable-v1': 'Old to-do backup', 'habit-tracker': 'Habit Tracker backup' };
 
 function countCheckIns(h?: HabitData): number {
   if (!h) return 0;

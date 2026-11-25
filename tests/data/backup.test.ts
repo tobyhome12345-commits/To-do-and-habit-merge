@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultData } from '../../src/data/defaults';
-import { applyImport, exportJSON, mergeHabits, mergeTodo, parseBackup, resetData } from '../../src/data/backup';
+import { applyImport, backupFileName, exportJSON, mergeHabits, mergeTodo, parseBackup, resetData } from '../../src/data/backup';
 import { blankTask } from '../../src/todo/model/data';
 import { applyHabitAction } from '../../src/data/store';
 import type { AppData } from '../../src/data/types';
@@ -18,15 +18,16 @@ function sample(): AppData {
 
 const allIds = (d: AppData) => [...d.todo.tasks.map((t) => t.notifId), ...d.habits.habits.map((h) => h.notifId)];
 
-describe('Tickday backup file', () => {
+describe('Doable backup file', () => {
   it('round-trips everything through export and import', () => {
     const d = sample();
     const plan = parseBackup(exportJSON(d, 5000, '1.0.7'));
-    expect(plan.kind).toBe('tickday');
-    expect(plan.label).toBe('Tickday backup');
+    expect(plan.kind).toBe('doable');
+    expect(plan.label).toBe('Doable backup');
     expect(plan.detected.data).toEqual(d);
     expect(plan.stats).toEqual({ habits: 1, checkIns: 1, tasks: 1, open: 1, lists: 4 });
-    expect(JSON.parse(exportJSON(d))).toMatchObject({ app: 'Tickday', format: 1, version: 1 });
+    expect(JSON.parse(exportJSON(d))).toMatchObject({ app: 'Doable', format: 2, version: 1 });
+    expect(backupFileName(Date.UTC(2026, 10, 25, 12))).toBe('doable-backup-2026-11-25.json');
   });
 
   it('replace swaps everything (settings too); merge keeps your settings', () => {
@@ -43,13 +44,27 @@ describe('Tickday backup file', () => {
   it('rejects junk with a friendly message', () => {
     expect(() => parseBackup('not json')).toThrow(/valid JSON/);
   });
+
+  it('still imports backups saved while the app was called Tickday', () => {
+    const d = sample();
+    const tickdayFile = JSON.stringify({ app: 'Tickday', format: 1, version: 1, exportedAt: '2026-11-25T07:00:00.000Z', appVersion: '1.0.2', data: d });
+    const plan = parseBackup(tickdayFile);
+    expect(plan).toMatchObject({ kind: 'doable', label: 'Doable backup' });
+    expect(plan.detected.data).toEqual(d);
+  });
+
+  it('never mixes up a new Doable backup with an old to-do backup', () => {
+    expect(parseBackup(exportJSON(sample())).kind).toBe('doable');
+    expect(parseBackup(JSON.stringify(doableBackup)).kind).toBe('doable-v1');
+    expect(parseBackup(JSON.stringify(doableBackup.data)).kind).toBe('doable-v1');
+  });
 });
 
-describe('importing an old Doable backup', () => {
+describe('importing an old to-do (Doable v1) backup', () => {
   it('replace swaps only the tasks; habits and the look stay', () => {
     const mine = sample();
     const plan = parseBackup(JSON.stringify(doableBackup));
-    expect(plan).toMatchObject({ kind: 'doable', label: 'Doable backup', stats: { tasks: 3, open: 2, lists: 2, habits: 0 } });
+    expect(plan).toMatchObject({ kind: 'doable-v1', label: 'Old to-do backup', stats: { tasks: 3, open: 2, lists: 2, habits: 0 } });
     const d = applyImport(mine, plan, 'replace');
     expect(d.todo.tasks.map((t) => t.id)).toEqual(['d1', 'd2', 'd3']);
     expect(d.habits).toEqual(mine.habits);

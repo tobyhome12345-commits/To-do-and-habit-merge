@@ -7,7 +7,7 @@ import { currentStreak, streakLabel } from '../habits/lib/streaks';
 import type { Habit, HabitState } from '../habits/lib/types';
 
 /*
- * Habit reminders (new in Tickday: the Habit Tracker's own reminders were removed because they didn't work).
+ * Habit reminders (new in Doable: the Habit Tracker's own reminders were removed because they didn't work).
  *
  * Each habit with a reminder time gets one notification per upcoming day it's actually due, planned
  * HORIZON_DAYS ahead, instead of one repeating alarm. That way it can skip days that are paused, on

@@ -1,5 +1,5 @@
 /* =====================================================================
-   Tickday shell: what joins the two apps together on ONE design system
+   Doable shell: what joins the two apps together on ONE design system
    ("Garden notebook" from the Habit Tracker). The to-do styles (tasks,
    browse, sheets.css, from Doable) use these aliases, so both halves share
    the same colours, type, radii, shadows and motion.
@@ -51,7 +51,7 @@ body.sheet-open {
   padding-bottom: calc(var(--safe-bottom) + 32px);
 }
 
-/* Doable screens wrapped their content in a scroll box; Tickday scrolls the page instead. */
+/* Doable screens wrapped their content in a scroll box; Doable scrolls the page instead. */
 .scroll {
   padding: 0;
 }

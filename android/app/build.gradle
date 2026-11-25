@@ -12,9 +12,11 @@ if (keystorePropsFile.exists()) {
 }
 
 android {
-    namespace = "com.tickday.app"
+    namespace = "com.doable.tick"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
+        // ⚠️ Keep this id (from when the app was called "Tickday"): changing it would make Android treat
+        // Doable as a different app, so it couldn't update the installed one or keep its data.
         applicationId "com.tickday.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion

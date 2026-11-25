@@ -4,7 +4,7 @@ import type { HabitState, DateKey, DateRange, Habit, HabitRule, Schedule, TimeOf
 
 /*
  * Validates and repairs habit data from storage or a backup file. This is the Habit Tracker's
- * own migration code (v1 → v2), reused by Tickday as the "habits slice" cleaner.
+ * own migration code (v1 → v2), reused by Doable as the "habits slice" cleaner.
  */
 
 export function defaultState(): HabitState {
@@ -16,7 +16,7 @@ export function defaultState(): HabitState {
   };
 }
 
-/** Old Habit Tracker settings that Tickday keeps in its shared settings instead. */
+/** Old Habit Tracker settings that Doable keeps in its shared settings instead. */
 export interface LegacyHabitSettings {
   theme: 'system' | 'light' | 'dark';
   weekStart: 0 | 1;
@@ -101,7 +101,7 @@ function normalizeHabit(h: Record<string, unknown>): Habit {
   };
 }
 
-/** 'HH:mm', or Habit Tracker v1's `{ enabled, time }` (reminders were removed in v1.0.5, then fixed in Tickday). */
+/** 'HH:mm', or Habit Tracker v1's `{ enabled, time }` (reminders were removed in v1.0.5, then fixed in Doable). */
 function normalizeReminder(r: unknown): string | null {
   if (isValidTime(r)) return r;
   if (isObj(r) && r.enabled === true && isValidTime(r.time)) return r.time;
@@ -157,7 +157,7 @@ export function normalizeState(raw: unknown): HabitState {
   };
 }
 
-/** Theme / week start / accent from an old Habit Tracker save (informational: imports never change Tickday's look). */
+/** Theme / week start / accent from an old Habit Tracker save (informational: imports never change Doable's look). */
 export function legacySettings(raw: unknown): LegacyHabitSettings {
   const s = isObj(raw) && isObj(raw.settings) ? raw.settings : {};
   return {

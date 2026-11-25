@@ -54,7 +54,7 @@ export interface Habit {
 }
 
 /**
- * The habit code's view of settings. In Tickday, weekStart is shared with tasks (data.settings)
+ * The habit code's view of settings. In Doable, weekStart is shared with tasks (data.settings)
  * and vacations live in the habits slice; data/habitView.ts joins them for the habit code.
  */
 export interface Settings {

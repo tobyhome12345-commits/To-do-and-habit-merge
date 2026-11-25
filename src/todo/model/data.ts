@@ -152,7 +152,7 @@ export function cleanTodoSettings(x: unknown): TodoSettings {
 export class DataError extends Error {}
 
 /**
- * Clean a to-do slice ({ lists, tasks }): from Tickday's own save, or from an old Doable
+ * Clean a to-do slice ({ lists, tasks }): from this app's own save, or from the old to-do app's
  * file (schemaVersion 1, which also has settings + meta). Throws DataError if it isn't task data.
  * Task notification ids are made unique here; data/notifIds.ts then makes them unique against habits too.
  */

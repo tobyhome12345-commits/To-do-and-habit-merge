@@ -3,7 +3,7 @@ import type { HabitState } from '../habits/lib/types';
 import { assignNotifIds } from './notifIds';
 import type { AppData } from './types';
 
-/* The habit code works on its own shape; this joins it to Tickday's document. */
+/* The habit code works on its own shape; this joins it to Doable's document. */
 
 let viewCache: { habits: AppData['habits']; weekStart: 0 | 1; view: HabitState } | null = null;
 

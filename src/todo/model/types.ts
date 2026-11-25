@@ -85,10 +85,10 @@ export interface ViewPrefs {
   filters: Filters;
 }
 
-/** Settings are shared by habits and tasks in Tickday (see data/types.ts). */
+/** Settings are shared by habits and tasks in Doable (see data/types.ts). */
 export type { Settings, ThemeMode } from '../../data/types';
 
-/** The to-do half of Tickday's data document. */
+/** The to-do half of Doable's data document. */
 export interface TodoData {
   lists: List[];
   tasks: Task[];

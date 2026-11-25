@@ -6,7 +6,7 @@ import type { AppData } from './types';
 import type { Habit, Schedule, TimeOfDay } from '../habits/lib/types';
 
 /*
- * Sample habits + tasks for screenshots and trying Tickday in a browser (?demo=1). Never used on the phone.
+ * Sample habits + tasks for screenshots and trying Doable in a browser (?demo=1). Never used on the phone.
  *   ?demo=1        a normal day in progress
  *   ?demo=done     everything ticked off (Tick celebrates)
  *   ?demo=new      a fresh install (welcome card)

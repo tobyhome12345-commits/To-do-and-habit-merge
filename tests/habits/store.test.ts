@@ -88,14 +88,14 @@ describe('normalizeState', () => {
       rules: [{ since: '2026-01-05', target: 1, schedule: { kind: 'daily' } }],
       pauses: [],
       archivedAt: null,
-      // v1's reminder (removed in Habit Tracker v1.0.5) comes back in Tickday
+      // v1's reminder (removed in Habit Tracker v1.0.5) comes back in Doable
       reminder: '20:00',
       notifId: 0,
       snoozedUntil: null,
     });
     expect(s.completions).toEqual({ a: { '2026-01-05': 1, '2026-01-06': 1 } });
     expect(s.notes).toEqual({});
-    // Theme and accent are Tickday-wide settings now; the habit half keeps weekStart + vacations.
+    // Theme and accent are app-wide settings now; the habit half keeps weekStart + vacations.
     expect(s.settings).toEqual({ weekStart: 0, vacations: [] });
     expect(legacySettings({ settings: { theme: 'dark', weekStart: 0 } })).toEqual({ theme: 'dark', weekStart: 0, accent: null });
   });

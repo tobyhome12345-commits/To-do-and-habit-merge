@@ -1,4 +1,4 @@
-package com.tickday.app;
+package com.doable.tick;
 
 import com.getcapacitor.BridgeActivity;
 

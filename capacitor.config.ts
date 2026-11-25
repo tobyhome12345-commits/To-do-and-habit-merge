@@ -1,8 +1,10 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
+  // ⚠️ Keep this id: the app was first released as "Tickday" with it, and Android only installs an
+  // update over the existing app (keeping your data) when the id and signing key stay the same.
   appId: 'com.tickday.app',
-  appName: 'Tickday',
+  appName: 'Doable',
   webDir: 'dist',
   android: {
     backgroundColor: '#FBF6EE',

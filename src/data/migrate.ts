@@ -9,11 +9,11 @@ export { DataError };
 /*
  * Reading saved data and backup files.
  *
- * Tickday's own document has a `version`. When the shape changes, bump DATA_VERSION and add a step to
+ * Doable's own document has a `version`. When the shape changes, bump DATA_VERSION and add a step to
  * MIGRATIONS that turns version N into N+1; older saves and backups are upgraded one step at a time.
  *
- * It also reads the two apps Tickday replaces:
- *  - Doable backups:        { app: 'Doable', format: 1, data: { schemaVersion: 1, lists, tasks, settings, meta } }
+ * It also reads the two apps Doable combines:
+ *  - old to-do backups:     { app: 'Doable', format: 1, data: { schemaVersion: 1, lists, tasks, settings, meta } }
  *  - Habit Tracker backups: { app: 'habit-tracker', version: 1 | 2, habits, completions, notes?, settings }
  * Each half is cleaned by the old app's own validation code (normalizeState / cleanTodo).
  */
@@ -27,7 +27,7 @@ export const MIGRATIONS: Record<number, (doc: Raw) => Raw> = {};
 
 export function upgrade(doc: Raw): Raw {
   let v = Math.floor(num(doc.version, 1));
-  if (v > DATA_VERSION) throw new DataError(`This file is from a newer version of Tickday (data v${v}). Update the app first.`);
+  if (v > DATA_VERSION) throw new DataError(`This file is from a newer version of Doable (data v${v}). Update the app first.`);
   if (v < 1) v = 1;
   let out = doc;
   while (v < DATA_VERSION) {
@@ -65,9 +65,9 @@ export function cleanHabits(raw: unknown, weekStart: 0 | 1 = 1): HabitData {
   return { habits: s.habits, completions: s.completions, notes: s.notes, vacations: s.settings.vacations };
 }
 
-/** Turn a Tickday document (any supported version) into valid, current AppData. */
+/** Turn a Doable document (any supported version) into valid, current AppData. */
 export function normalizeAppData(raw: unknown): AppData {
-  if (!isObj(raw) || !isObj(raw.habits) || !isObj(raw.todo)) throw new DataError("That doesn't look like Tickday data.");
+  if (!isObj(raw) || !isObj(raw.habits) || !isObj(raw.todo)) throw new DataError("That doesn't look like Doable data.");
   const doc = upgrade(raw);
   const settings = cleanSettings(doc.settings);
   const habits = cleanHabits(doc.habits, settings.weekStart);
@@ -93,12 +93,21 @@ export function normalizeAppData(raw: unknown): AppData {
 
 /* ---------------- recognising any file ---------------- */
 
-export type BackupKind = 'tickday' | 'doable' | 'habit-tracker';
+/**
+ * doable        this app's own backup ({ app: 'Doable', format: 2, data: { version, habits, todo, … } }).
+ *               Files saved while the app was still called Tickday ({ app: 'Tickday', format: 1, … }) are the same kind.
+ * doable-v1     the old to-do app's backup ({ app: 'Doable', format: 1, data: { schemaVersion: 1, tasks, lists } }).
+ * habit-tracker the Habit Tracker's backup.
+ */
+export type BackupKind = 'doable' | 'doable-v1' | 'habit-tracker';
+
+/** The app was called Tickday in v1.0.1–1.0.2; its backups are still read (never shown to you). */
+const LEGACY_APP_NAME = 'Tickday';
 
 export interface Detected {
   kind: BackupKind;
   exportedAt?: string;
-  /** Full document (Tickday files only). */
+  /** Full document (this app's own backups). */
   data?: AppData;
   /** One half (old single-app files). */
   habits?: HabitData;
@@ -112,25 +121,30 @@ function looksDoable(o: Raw) {
 function looksHabit(o: Raw) {
   return Array.isArray(o.habits) && !looksDoable(o);
 }
+/** A whole document (habits + todo halves), as opposed to the old to-do app's { tasks, lists }. */
+function looksWhole(o: unknown): boolean {
+  return isObj(o) && isObj(o.habits) && isObj(o.todo);
+}
 
 /** Work out what a parsed JSON file is and clean it. Throws DataError with a friendly message. */
 export function detect(json: unknown): Detected {
-  if (!isObj(json)) throw new DataError("That file isn't a Tickday, Habit Tracker or Doable backup.");
+  if (!isObj(json)) throw new DataError("That file isn't a Doable or Habit Tracker backup.");
   const exportedAt = typeof json.exportedAt === 'string' ? json.exportedAt : undefined;
 
-  // Tickday (wrapped backup file, or a bare document)
-  if (json.app === 'Tickday' || (isObj(json.habits) && isObj(json.todo))) {
-    const payload = json.app === 'Tickday' && isObj(json.data) ? json.data : json;
-    return { kind: 'tickday', exportedAt, data: normalizeAppData(payload) };
+  // This app's own backup (wrapped file, or a bare document). Told apart from the old to-do app's
+  // files by its shape: a whole document has a habits half and a todo half.
+  if (json.app === LEGACY_APP_NAME || (json.app === 'Doable' && looksWhole(json.data)) || looksWhole(json)) {
+    const payload = isObj(json.data) && json.app ? json.data : json;
+    return { kind: 'doable', exportedAt, data: normalizeAppData(payload) };
   }
 
-  // Doable (wrapped backup file, or bare Doable data)
+  // The old to-do app's backup (wrapped file, or its bare data)
   if (json.app === 'Doable' || looksDoable(json)) {
     const payload = json.app === 'Doable' && isObj(json.data) ? json.data : json;
     try {
-      return { kind: 'doable', exportedAt, todo: cleanTodo(payload), todoSettings: cleanTodoSettings(payload.settings) };
+      return { kind: 'doable-v1', exportedAt, todo: cleanTodo(payload), todoSettings: cleanTodoSettings(payload.settings) };
     } catch (e) {
-      throw new DataError(e instanceof DataError && e.message.includes('newer') ? e.message : "That doesn't look like a Doable backup.");
+      throw new DataError(e instanceof DataError && e.message.includes('newer') ? e.message : "That doesn't look like a to-do backup.");
     }
   }
 
@@ -143,11 +157,11 @@ export function detect(json: unknown): Detected {
     }
   }
 
-  throw new DataError("That file isn't a Tickday, Habit Tracker or Doable backup.");
+  throw new DataError("That file isn't a Doable or Habit Tracker backup.");
 }
 
 /**
- * Load Tickday's saved document from storage. Falls back to wrapping old single-app data,
+ * Load the saved document from storage. Falls back to wrapping old single-app data,
  * so it never throws for anything recognisable.
  */
 export function migrate(raw: unknown): AppData {

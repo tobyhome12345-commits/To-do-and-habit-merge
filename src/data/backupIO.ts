@@ -17,10 +17,10 @@ export async function exportBackup(data: AppData): Promise<'shared' | 'downloade
   if (isNative) {
     const res = await Filesystem.writeFile({ path: name, data: json, directory: Directory.Cache, encoding: Encoding.UTF8 });
     await Share.share({
-      title: 'Tickday backup',
-      text: `Tickday backup (${data.habits.habits.length} habits, ${data.todo.tasks.length} tasks)`,
+      title: 'Doable backup',
+      text: `Doable backup (${data.habits.habits.length} habits, ${data.todo.tasks.length} tasks)`,
       files: [res.uri],
-      dialogTitle: 'Save your Tickday backup',
+      dialogTitle: 'Save your Doable backup',
     });
     return 'shared';
   }
@@ -45,7 +45,7 @@ export function readFileText(file: File): Promise<string> {
   });
 }
 
-/** Read a backup file (Tickday, Habit Tracker or Doable) and open the import sheet for it. */
+/** Read a backup file (Doable, Habit Tracker or an old to-do backup) and open the import sheet for it. */
 export async function openBackupFile(file: File) {
   try {
     const plan = parseBackup(await readFileText(file));

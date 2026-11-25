@@ -12,7 +12,7 @@ import { assignNotifIds } from './notifIds';
 import type { AppData, Settings } from './types';
 
 /*
- * Tickday's one store (Zustand). It holds the whole saved document:
+ * Doable's one store (Zustand). It holds the whole saved document:
  *  - task changes go through transact() (from Doable), which records the "before" copy of every task/list
  *    it touches, so undo puts exactly those back without wiping out unrelated edits made afterwards;
  *  - habit changes go through the Habit Tracker's pure reducer, via habitView()/withHabitState();
