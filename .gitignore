@@ -16,3 +16,5 @@ android/app/src/main/assets/capacitor.config.json
 android/app/src/main/assets/capacitor.plugins.json
 android/app/src/main/res/xml/config.xml
 *.tsbuildinfo
+# Rendered by `npm run assets` from src/mascot/tick.ts
+assets/*.png

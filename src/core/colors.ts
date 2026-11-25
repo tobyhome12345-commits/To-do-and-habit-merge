@@ -55,6 +55,8 @@ export const ACCENT_PRESETS = [
   { name: 'Rose', value: '#f25c9a' },
   { name: 'Plum', value: '#a970f0' },
   { name: 'Iris', value: '#6f7cf7' },
+  /** Doable's old accent, so the to-do side can keep its look. */
+  { name: 'Violet', value: '#6c5ce7' },
   { name: 'Sky', value: '#3aa5f2' },
   { name: 'Lagoon', value: '#22b8b0' },
   { name: 'Leaf', value: '#3dbe7e' },
