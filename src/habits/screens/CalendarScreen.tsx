@@ -124,29 +124,20 @@ export function CalendarScreen({ today, selected, onSelect }: Props) {
 
   if (habits.length === 0) {
     return (
-      <main className="screen">
-        <header className="screen-header">
-          <h1>Calendar</h1>
-        </header>
+      <>
         <div className="card empty">
           <Tick mood="sleepy" size={130} label="Tick napping" />
           <h2>Tick’s napping…</h2>
-          <p>Add a habit on the Today tab and your days will light up here.</p>
+          <p>Add a habit with the + button and your days will light up here.</p>
         </div>
-      </main>
+      </>
     );
   }
 
   const detailHabits = habit ? [habit] : habits.filter((h) => pickedDay >= habitStart(h, completions));
 
   return (
-    <main className="screen">
-      <header className="screen-header">
-        <div>
-          <p className="subtitle">Your history</p>
-          <h1>Calendar</h1>
-        </div>
-      </header>
+    <>
 
       <div className="chips scroll-x habit-filter" role="tablist" aria-label="Choose habit">
         <button className={`chip${mode === 'all' ? ' selected' : ''}`} role="tab" aria-selected={mode === 'all'} onClick={() => onSelect('all')}>
@@ -339,6 +330,7 @@ export function CalendarScreen({ today, selected, onSelect }: Props) {
       </section>
 
       {noteFor && <NoteSheet habit={noteFor.habit} date={noteFor.date} onClose={() => setNoteFor(null)} />}
-    </main>
+    </>
   );
 }
+export default CalendarScreen;

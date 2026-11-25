@@ -85,27 +85,18 @@ export function StatsScreen({ today }: Props) {
 
   if (habits.length === 0) {
     return (
-      <main className="screen">
-        <header className="screen-header">
-          <h1>Stats</h1>
-        </header>
+      <>
         <div className="card empty">
           <Tick mood="sleepy" size={130} label="Tick napping" />
           <h2>Tick’s napping…</h2>
           <p>Add a habit and check it off, and your weekly and monthly progress will show up here.</p>
         </div>
-      </main>
+      </>
     );
   }
 
   return (
-    <main className="screen">
-      <header className="screen-header">
-        <div>
-          <p className="subtitle">How you’re doing</p>
-          <h1>Stats</h1>
-        </div>
-      </header>
+    <>
 
       <div className="segmented" role="tablist" aria-label="Period">
         {(['week', 'month'] as const).map((k) => (
@@ -272,6 +263,7 @@ export function StatsScreen({ today }: Props) {
           </div>
         ))}
       </section>
-    </main>
+    </>
   );
 }
+export default StatsScreen;

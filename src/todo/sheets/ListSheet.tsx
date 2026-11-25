@@ -6,7 +6,7 @@ import { useData } from '../../data/store';
 import { useUI } from '../../data/ui';
 import { Sheet, useCloseSheet } from '../../shared/Sheet';
 import { EmojiPicker } from '../components/EmojiPicker';
-import { inkFor } from '../../core/theme';
+import { onColor as inkFor } from '../../core/colors';
 
 export function ListSheet({ listId }: { listId?: ID }) {
   const closeSheet = useUI((s) => s.closeSheet);

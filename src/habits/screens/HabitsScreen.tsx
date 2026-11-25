@@ -1,24 +1,24 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { ChevronDown, Plus, Settings } from 'lucide-react';
+import { memo, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { ChevronDown, Plus } from 'lucide-react';
 import { DndContext, MouseSensor, TouchSensor, closestCenter, useSensor, useSensors, type DragEndEvent, type Modifier } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useHabits } from '../../data/store';
 import { formatDate } from '../../core/dates';
-import { successHaptic, tapHaptic } from '../../core/haptics';
+import { tapHaptic } from '../../core/haptics';
 import { HabitCard } from '../components/HabitCard';
 import { ProgressRing } from '../../shared/ProgressRing';
 import { Confetti } from '../../shared/Confetti';
 import { Tick } from '../../shared/Tick';
-import { Snackbar, type SnackInfo } from '../components/Snackbar';
-import { NoteSheet } from '../components/NoteSheet';
-import { STAGE_BADGES, dayContext, greeting, tickLevel, tickMessage, tickMood } from '../../mascot/mood';
-import { TIME_OPTIONS, countOn, liveHabits, pauseOn, ruleOn, todayInfo, type TodayInfo } from '../lib/schedule';
+import { useUI } from '../../data/ui';
+import { useHabitCheck } from '../useHabitCheck';
+import { STAGE_BADGES, dayContext, tickLevel, tickMessage, tickMood } from '../../mascot/mood';
+import { TIME_OPTIONS, liveHabits, pauseOn, todayInfo, type TodayInfo } from '../lib/schedule';
 import { bestStreak, currentStreak, type Streak } from '../lib/streaks';
 import type { TickMood } from '../../mascot/tick';
 import type { DateKey, Habit } from '../lib/types';
 
-const MOOD_LABEL: Record<TickMood, string> = {
+export const MOOD_LABEL: Record<TickMood, string> = {
   happy: 'happy and waving',
   celebrate: 'celebrating',
   sleepy: 'sleepy',
@@ -30,11 +30,6 @@ const MOOD_LABEL: Record<TickMood, string> = {
 interface Props {
   today: DateKey;
   hour: number;
-  onAdd: () => void;
-  onEdit: (h: Habit) => void;
-  onSettings: () => void;
-  /** A habit just reached its target on `date` (for streak milestones). */
-  onChecked: (habit: Habit, date: DateKey, count: number) => void;
 }
 
 interface Row {
@@ -48,7 +43,7 @@ type CardHandlers = Pick<Parameters<typeof HabitCard>[0], 'onTap' | 'onToggleDay
 
 const onlyVertical: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 
-function SortableCard({ row, ...rest }: { row: Row } & CardHandlers) {
+const SortableCard = memo(function SortableCard({ row, ...rest }: { row: Row } & CardHandlers) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.habit.id });
   const style: CSSProperties = { transform: CSS.Transform.toString(transform), transition };
   return (
@@ -56,7 +51,7 @@ function SortableCard({ row, ...rest }: { row: Row } & CardHandlers) {
       <HabitCard habit={row.habit} info={row.info} streak={row.streak} best={row.best} dragProps={{ ...attributes, ...listeners }} {...rest} />
     </div>
   );
-}
+});
 
 /** A list you can reorder by long-pressing a habit's name and dragging. */
 function SortableList({ rows, ...rest }: { rows: Row[] } & CardHandlers) {
@@ -83,7 +78,8 @@ function SortableList({ rows, ...rest }: { rows: Row[] } & CardHandlers) {
 
 const NOT_TODAY_KEY = 'ht-not-today-collapsed';
 
-export function TodayScreen({ today, hour, onAdd, onEdit, onSettings, onChecked }: Props) {
+/** The Habit Tracker's Today screen: the full habit list (Habits tab → Habits). */
+export function HabitsScreen({ today, hour }: Props) {
   const { state, dispatch } = useHabits();
   const habits = liveHabits(state, today);
   const ctx = dayContext(state, today, hour);
@@ -120,77 +116,21 @@ export function TodayScreen({ today, hour, onAdd, onEdit, onSettings, onChecked 
 
   // Confetti when the last habit of the day gets ticked (not on first render).
   const [burst, setBurst] = useState(0);
-  const [hop, setHop] = useState(0);
+  const hop = useUI((u) => u.hop);
+  const openSheet = useUI((u) => u.openSheet);
   const prevAllDone = useRef(allDone);
   useEffect(() => {
     if (allDone && !prevAllDone.current) setBurst((b) => b + 1);
     prevAllDone.current = allDone;
   }, [allDone]);
 
-  const [snack, setSnack] = useState<SnackInfo | null>(null);
-  const [noteFor, setNoteFor] = useState<{ habit: Habit; date: DateKey } | null>(null);
-  const closeSnack = useCallback(() => setSnack(null), []);
-
-  /** Apply a new count and celebrate if it just reached the target. */
-  const applyCount = useCallback(
-    (habit: Habit, date: DateKey, next: number) => {
-      const prev = countOn(state.completions, habit.id, date);
-      const target = ruleOn(habit, date).target;
-      dispatch({ type: 'setCount', id: habit.id, date, count: next });
-      if (date === today && next > prev) setHop((n) => n + 1);
-      const justMet = prev < target && next >= target;
-      if (!justMet) {
-        tapHaptic();
-        return;
-      }
-      onChecked(habit, date, next);
-      if (date === today) {
-        setSnack({ key: Date.now(), habit, date, prev });
-        const finishesDay = main.every((r) => r.habit.id === habit.id || r.info.kind === 'done');
-        if (finishesDay && main.some((r) => r.habit.id === habit.id)) successHaptic();
-        else tapHaptic();
-      } else tapHaptic();
-    },
-    [state.completions, dispatch, today, onChecked, main],
-  );
-
-  const onTap = useCallback(
-    (habit: Habit, date: DateKey, delta: 1 | -1) => applyCount(habit, date, Math.max(0, countOn(state.completions, habit.id, date) + delta)),
-    [applyCount, state.completions],
-  );
-  const onToggleDay = useCallback(
-    (habit: Habit, date: DateKey) => {
-      const target = ruleOn(habit, date).target;
-      applyCount(habit, date, countOn(state.completions, habit.id, date) >= target ? 0 : target);
-    },
-    [applyCount, state.completions],
-  );
-
-  const header = (
-    <header className="screen-header">
-      <div>
-        <p className="subtitle">
-          {greeting(hour)} · {formatDate(today, { weekday: 'short', month: 'short', day: 'numeric' })}
-        </p>
-        <h1>Today</h1>
-      </div>
-      <div className="header-actions">
-        {habits.length > 0 && (
-          <button className="icon-btn primary" aria-label="New habit" onClick={onAdd}>
-            <Plus size={24} strokeWidth={2.6} />
-          </button>
-        )}
-        <button className="icon-btn" aria-label="Settings" onClick={onSettings}>
-          <Settings size={21} />
-        </button>
-      </div>
-    </header>
-  );
+  const { onTap, onToggleDay } = useHabitCheck(today);
+  const onAdd = () => openSheet({ kind: 'habit' });
+  const onEdit = (h: Habit) => openSheet({ kind: 'habit', habitId: h.id });
 
   if (habits.length === 0) {
     return (
-      <main className="screen">
-        {header}
+      <>
         <section className="card empty hello">
           <div className="hello-art">
             <Tick mood="happy" stage={2} size={156} label="Tick the checkmark, waving hello" />
@@ -201,15 +141,14 @@ export function TodayScreen({ today, hour, onAdd, onEdit, onSettings, onChecked 
             <Plus size={20} strokeWidth={2.6} /> Add your first habit
           </button>
         </section>
-      </main>
+      </>
     );
   }
 
   const cardProps: CardHandlers = { onTap, onToggleDay, onEdit, today, state };
 
   return (
-    <main className="screen">
-      {header}
+    <>
 
       {onVacation && (
         <section className="card vacation-banner">
@@ -301,21 +240,6 @@ export function TodayScreen({ today, hour, onAdd, onEdit, onSettings, onChecked 
       </button>
       <p className="hint">Tap a habit to edit · hold and drag to reorder · tap a day to fix it</p>
 
-      {snack && (
-        <Snackbar
-          s={snack}
-          onDone={closeSnack}
-          onNote={() => {
-            setNoteFor({ habit: snack.habit, date: snack.date });
-            setSnack(null);
-          }}
-          onUndo={() => {
-            dispatch({ type: 'setCount', id: snack.habit.id, date: snack.date, count: snack.prev });
-            setSnack(null);
-          }}
-        />
-      )}
-      {noteFor && <NoteSheet habit={noteFor.habit} date={noteFor.date} onClose={() => setNoteFor(null)} />}
-    </main>
+    </>
   );
 }

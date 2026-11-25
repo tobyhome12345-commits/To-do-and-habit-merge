@@ -19,18 +19,18 @@ export function BrowseScreen() {
   const tasks = useData((s) => s.data.todo.tasks);
   const lists = useData((s) => s.data.todo.lists);
   const setListOrder = useData((s) => s.setListOrder);
-  const setTab = useUI((s) => s.setTab);
+  const setTodoView = useUI((s) => s.setTodoView);
   const push = useUI((s) => s.push);
   const openSheet = useUI((s) => s.openSheet);
   const c = useMemo(() => counts(tasks, today), [tasks, today]);
   const sorted = useMemo(() => [...lists].sort((a, b) => a.order - b.order), [lists]);
 
   const cards = [
-    { id: 'today', label: 'Today', n: c.today + c.overdue, Icon: Sun, color: '#3b82f6', go: () => setTab('today') },
-    { id: 'upcoming', label: 'Upcoming', n: c.upcoming, Icon: CalendarDays, color: '#f59e0b', go: () => setTab('upcoming') },
-    { id: 'overdue', label: 'Overdue', n: c.overdue, Icon: AlertCircle, color: '#ef4444', go: () => push({ kind: 'smart', view: 'overdue' }) },
-    { id: 'completed', label: 'Completed', n: c.completed, Icon: CheckCircle2, color: '#10b981', go: () => push({ kind: 'smart', view: 'completed' }) },
-    { id: 'all', label: 'All tasks', n: c.all, Icon: Layers, color: '#64748b', go: () => push({ kind: 'smart', view: 'all' }) },
+    { id: 'today', label: 'Today', n: c.today + c.overdue, Icon: Sun, color: '#3aa5f2', go: () => setTodoView('today') },
+    { id: 'upcoming', label: 'Upcoming', n: c.upcoming, Icon: CalendarDays, color: '#f5a524', go: () => setTodoView('upcoming') },
+    { id: 'overdue', label: 'Overdue', n: c.overdue, Icon: AlertCircle, color: '#ff6b5b', go: () => push({ kind: 'smart', view: 'overdue' }) },
+    { id: 'completed', label: 'Completed', n: c.completed, Icon: CheckCircle2, color: '#3dbe7e', go: () => push({ kind: 'smart', view: 'completed' }) },
+    { id: 'all', label: 'All tasks', n: c.all, Icon: Layers, color: '#8a8494', go: () => push({ kind: 'smart', view: 'all' }) },
   ];
 
   const sensors = useSensors(

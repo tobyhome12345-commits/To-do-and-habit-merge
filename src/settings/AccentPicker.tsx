@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { ACCENT_PRESETS, hexToHsl, hslToHex, onColor } from '../core/colors';
-import { useHabits } from '../data/store';
+import { useData } from '../data/store';
 
 /** Accent colour for the whole UI: Classic, presets, or a custom colour (hue + shade + hex). */
 export function AccentPicker() {
-  const { state, dispatch } = useHabits();
-  const accent = state.settings.accent;
+  const accent = useData((s) => s.data.settings.accent);
+  const updateSettings = useData((s) => s.updateSettings);
   const isCustom = accent !== null && !ACCENT_PRESETS.some((p) => p.value === accent);
   const [open, setOpen] = useState(isCustom);
   const [hsl, setHsl] = useState<[number, number, number]>(() => (isCustom ? hexToHsl(accent) : [174, 72, 45]));
   const [hexText, setHexText] = useState(isCustom ? accent : '');
-  const set = (v: string | null) => dispatch({ type: 'settings', patch: { accent: v } });
+  const set = (v: string | null) => updateSettings({ accent: v });
 
   const applyHsl = (next: [number, number, number]) => {
     setHsl(next);

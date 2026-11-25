@@ -1,10 +1,10 @@
-import type { AppData, Task } from './types';
-import { INBOX_ID, defaultSettings } from './types';
+import type { List, Task, TodoData } from './types';
+import { INBOX_ID } from './types';
 import { blankTask, uid } from './data';
 import { addDays, localEpoch, todayStr, weekday } from '../../core/dates';
 
 /** Realistic sample data for screenshots and trying the app in a browser (?demo=1). Never used on the phone. */
-export function demoData(now = Date.now()): AppData {
+export function demoTodo(now = Date.now()): TodoData & { nextNotifId: number } {
   const today = todayStr(now);
   const d = (n: number) => addDays(today, n);
   const L = {
@@ -14,12 +14,12 @@ export function demoData(now = Date.now()): AppData {
     personal: uid(),
     fitness: uid(),
   };
-  const lists = [
-    { id: L.inbox, name: 'Inbox', color: '#6c5ce7', emoji: '📥', order: 0, createdAt: now },
-    { id: L.school, name: 'School', color: '#3b82f6', emoji: '🎒', order: 1, createdAt: now },
-    { id: L.home, name: 'Home', color: '#f59e0b', emoji: '🏠', order: 2, createdAt: now },
-    { id: L.personal, name: 'Personal', color: '#10b981', emoji: '🌱', order: 3, createdAt: now },
-    { id: L.fitness, name: 'Fitness', color: '#ec4899', emoji: '💪', order: 4, createdAt: now },
+  const lists: List[] = [
+    { id: L.inbox, name: 'Inbox', color: '#6f7cf7', emoji: '📥', order: 0, createdAt: now },
+    { id: L.school, name: 'School', color: '#3aa5f2', emoji: '🎒', order: 1, createdAt: now },
+    { id: L.home, name: 'Home', color: '#ff8f3f', emoji: '🏠', order: 2, createdAt: now },
+    { id: L.personal, name: 'Personal', color: '#3dbe7e', emoji: '🌱', order: 3, createdAt: now },
+    { id: L.fitness, name: 'Fitness', color: '#f25c9a', emoji: '💪', order: 4, createdAt: now },
   ];
   let n = 1;
   let o = 0;
@@ -55,11 +55,5 @@ export function demoData(now = Date.now()): AppData {
     T({ emoji: '🥦', title: 'Help cook dinner', listId: L.home, dueDate: d(-1), completedAt: at(d(-1), '18:45') }),
   ];
 
-  return {
-    schemaVersion: 1,
-    lists,
-    tasks,
-    settings: defaultSettings(),
-    meta: { nextNotifId: n, createdAt: now },
-  };
+  return { lists, tasks, nextNotifId: n };
 }

@@ -12,7 +12,7 @@ import { Chip, Segmented } from '../../shared/Controls';
 import { EmojiPicker } from '../components/EmojiPicker';
 import { RepeatEditor } from '../components/RepeatEditor';
 import { Checkbox } from '../components/Checkbox';
-import { requestReminderPermission } from '../../platform/reminders';
+import { requestReminderPermission } from '../../notifications/native';
 import { haptic } from '../../core/haptics';
 import { toggleWithAnimation } from '../actions';
 
