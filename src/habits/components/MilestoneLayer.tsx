@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useUI } from '../../data/ui';
+import { pushBack } from '../../core/backStack';
 import { BIG_MILESTONES } from '../../mascot/mood';
 import { MilestoneCelebration } from './MilestoneCelebration';
 import { MilestoneToast } from './MilestoneToast';
@@ -9,6 +10,8 @@ export function MilestoneLayer() {
   const m = useUI((s) => s.milestone);
   const setMilestone = useUI((s) => s.setMilestone);
   const done = useCallback(() => setMilestone(null), [setMilestone]);
+  // The Android back button closes the celebration first.
+  useEffect(() => (m ? pushBack(done) : undefined), [m, done]);
   if (!m) return null;
   return BIG_MILESTONES.includes(m.streak) ? <MilestoneCelebration m={m} onDone={done} /> : <MilestoneToast m={m} onDone={done} />;
 }
