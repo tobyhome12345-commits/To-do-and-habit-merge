@@ -591,3 +591,22 @@ body.sheet-open {
 .reset-opt.armed small {
   color: rgba(255, 255, 255, 0.85);
 }
+
+/* Habit sheet: reminder row */
+.reminder-edit {
+  display: grid;
+  gap: 10px;
+}
+
+.reminder-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.reminder-time input {
+  max-width: 150px;
+}

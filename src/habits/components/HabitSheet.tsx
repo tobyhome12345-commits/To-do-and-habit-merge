@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from 'react';
-import { Archive, Check, ChevronDown, Clock, Minus, Pause, Play, Plus, Repeat, Target, Trash2, X } from 'lucide-react';
+import { Archive, Bell, BellOff, Check, ChevronDown, Clock, Minus, Pause, Play, Plus, Repeat, Target, Trash2, X } from 'lucide-react';
 import { Sheet } from '../../shared/Sheet';
 import { DEFAULT_HABIT_COLOR, HABIT_COLORS, alpha, onColor } from '../../core/colors';
 import { EMOJIS, QUICK_PICKS, firstGrapheme } from '../lib/emojis';
 import { useHabits } from '../../data/store';
 import type { HabitInput } from '../lib/reducer';
-import { addDays, formatDate, todayKey, weekdayLetters } from '../../core/dates';
+import { addDays, formatDate, formatTime, todayKey, weekdayLetters } from '../../core/dates';
+import { requestReminderPermission } from '../../notifications/native';
 import { TIME_OPTIONS, goalLabel, ruleOn, scheduleLabel } from '../lib/schedule';
 import type { Habit, Schedule, TimeOfDay } from '../lib/types';
 
@@ -15,7 +16,11 @@ interface Props {
 }
 
 type Kind = Schedule['kind'];
-type Panel = 'goal' | 'repeat' | 'time' | 'pause' | null;
+type Panel = 'goal' | 'repeat' | 'time' | 'reminder' | 'pause' | null;
+
+/** Suggested reminder time for each time of day. */
+const REMIND_AT: Record<TimeOfDay, string> = { morning: '08:00', afternoon: '13:00', evening: '19:30', anytime: '18:00' };
+const QUICK_TIMES = ['07:30', '08:00', '12:30', '16:00', '18:00', '19:30', '21:00'];
 
 const UNITS = ['glasses', 'pages', 'minutes', 'reps', 'steps'];
 const KINDS: { value: Kind; label: string }[] = [
@@ -76,6 +81,7 @@ export function HabitSheet({ habit, onClose }: Props) {
   const [times, setTimes] = useState(sched?.kind === 'weekly' ? sched.times : 3);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(habit?.timeOfDay ?? 'anytime');
   const [panel, setPanel] = useState<Panel>(null);
+  const [reminder, setReminder] = useState<string | null>(habit?.reminder ?? null);
   const [pauseFrom, setPauseFrom] = useState(today);
   const [pauseTo, setPauseTo] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -97,7 +103,8 @@ export function HabitSheet({ habit, onClose }: Props) {
       {(close) => {
         const save = () => {
           if (!trimmed) return;
-          const data: HabitInput = { name: trimmed, emoji, color, unit: finalUnit, timeOfDay, target: finalTarget, schedule };
+          const data: HabitInput = { name: trimmed, emoji, color, unit: finalUnit, timeOfDay, target: finalTarget, schedule, reminder };
+          if (reminder) void requestReminderPermission();
           if (habit) dispatch({ type: 'updateHabit', id: habit.id, patch: data });
           else dispatch({ type: 'addHabit', habit: data });
           close();
@@ -277,6 +284,40 @@ export function HabitSheet({ habit, onClose }: Props) {
                       </button>
                     ))}
                   </div>
+                </OptionRow>
+
+                <OptionRow
+                  icon={<Bell size={19} />}
+                  title="Reminder"
+                  value={reminder ? `At ${formatTime(reminder)}` : 'Off'}
+                  open={panel === 'reminder'}
+                  onToggle={() => {
+                    if (!reminder && panel !== 'reminder') setReminder(REMIND_AT[timeOfDay]);
+                    toggle('reminder');
+                  }}
+                  color={color}
+                >
+                  <div className="reminder-edit">
+                    <label className="reminder-time">
+                      <span>Remind me at</span>
+                      <input type="time" className="text-input small" value={reminder ?? ''} onChange={(e) => setReminder(e.target.value || null)} aria-label="Reminder time" />
+                    </label>
+                    <div className="chips wrap" aria-label="Quick times">
+                      {QUICK_TIMES.map((t) => (
+                        <button key={t} className={`chip small${reminder === t ? ' selected' : ''}`} onClick={() => setReminder(t)}>
+                          {formatTime(t)}
+                        </button>
+                      ))}
+                      <button className={`chip small${reminder === null ? ' selected' : ''}`} onClick={() => setReminder(null)}>
+                        <BellOff size={14} /> Off
+                      </button>
+                    </div>
+                  </div>
+                  <p className="opt-note">
+                    {reminder
+                      ? 'Tick nudges you on days this habit is due, and stays quiet once it’s done, paused or on vacation.'
+                      : 'No reminder for this habit.'}
+                  </p>
                 </OptionRow>
               </div>
 
