@@ -351,3 +351,162 @@ body.sheet-open {
 .task {
   border-radius: 20px;
 }
+
+/* ---------- Combined Today ---------- */
+.today-home .hero {
+  margin-bottom: 4px;
+}
+
+.today-split {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.split-chip {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: transform 0.15s var(--spring);
+}
+
+.split-chip b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.split-chip:active {
+  transform: scale(0.95);
+}
+
+.today-split .stage-badge {
+  margin-left: auto;
+}
+
+.section-title.sub {
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.section-title__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.today-home .quickadd {
+  margin-bottom: 10px;
+}
+
+.today-home .habit-list {
+  gap: 10px;
+}
+
+.habit-card.compact {
+  padding: 12px 12px 12px 14px;
+}
+
+/* Welcome card (fresh install) */
+.welcome {
+  display: flex;
+  gap: 12px;
+  padding: 16px 16px 16px 10px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, var(--sun-soft), transparent 70%), var(--surface);
+}
+
+.welcome-art {
+  flex: none;
+}
+
+.welcome-text h2 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.welcome-text p {
+  font-size: 14px;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+.welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* "Add something" chooser */
+.add-choices {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 8px;
+  position: relative;
+}
+
+.add-choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  text-align: left;
+  transition: transform 0.15s var(--spring);
+}
+
+.add-choice:active {
+  transform: scale(0.98);
+}
+
+.add-choice b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.add-choice small {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.add-choice-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.add-choice-icon.habit {
+  background: var(--leaf-soft);
+  color: var(--leaf);
+}
+
+.add-choice-icon.task {
+  background: var(--sun-soft);
+  color: var(--sun-deep);
+}
+
+.add-tick {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.sheet-title {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  padding: 6px 20px 2px;
+}

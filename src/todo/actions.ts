@@ -2,10 +2,7 @@ import type { ID } from './model/types';
 import { useData } from '../data/store';
 import { useUI } from '../data/ui';
 import { haptic } from '../core/haptics';
-
-export function prefersReducedMotion() {
-  return useData.getState().data.settings.reduceMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-}
+import { prefersReducedMotion } from '../core/theme';
 
 /** Tick (or untick) with the celebration animation first, then commit the change. */
 export function toggleWithAnimation(id: ID) {
@@ -14,6 +11,7 @@ export function toggleWithAnimation(id: ID) {
   const t = useData.getState().data.todo.tasks.find((x) => x.id === id);
   if (!t) return;
   haptic(t.completedAt == null ? 'success' : 'light');
+  if (t.completedAt == null) ui.bumpHop(); // Tick does a little hop for tasks too
   ui.setCompleting(id, true);
   setTimeout(
     () => {

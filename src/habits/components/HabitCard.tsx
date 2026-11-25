@@ -20,6 +20,8 @@ interface Props {
   onEdit: (h: Habit) => void;
   /** Long-press drag hooks from the sortable list (on the name area only). */
   dragProps?: HTMLAttributes<HTMLElement>;
+  /** Compact card for the combined Today view: no week strip. */
+  compact?: boolean;
 }
 
 /** Check mark that draws itself in when the habit gets done. */
@@ -34,7 +36,7 @@ function CheckMark({ on, size = 28 }: { on: boolean; size?: number }) {
 const R = 25;
 const CIRC = 2 * Math.PI * R;
 
-export const HabitCard = memo(function HabitCard({ habit, state, info, streak, best, today, onTap, onToggleDay, onEdit, dragProps }: Props) {
+export const HabitCard = memo(function HabitCard({ habit, state, info, streak, best, today, onTap, onToggleDay, onEdit, dragProps, compact }: Props) {
   const c = habit.color;
   const isDone = info.kind === 'done' || (info.count >= info.target && info.count > 0);
   const counted = info.target > 1;
@@ -54,7 +56,7 @@ export const HabitCard = memo(function HabitCard({ habit, state, info, streak, b
 
   return (
     <article
-      className={`habit-card card${isDone ? ' done' : ''}${dim ? ' dim' : ''}`}
+      className={`habit-card card${isDone ? ' done' : ''}${dim ? ' dim' : ''}${compact ? ' compact' : ''}`}
       style={isDone && !dim ? { background: `linear-gradient(135deg, ${alpha(c, 0.16)}, ${alpha(c, 0.04)}), var(--surface)`, borderColor: alpha(c, 0.4) } : undefined}
     >
       <div className="habit-main">
@@ -159,6 +161,7 @@ export const HabitCard = memo(function HabitCard({ habit, state, info, streak, b
           )}
         </div>
       </div>
+      {!compact && (
       <div className="week-strip">
         {week.map((d) => {
           const count = countOn(state.completions, habit.id, d);
@@ -196,6 +199,7 @@ export const HabitCard = memo(function HabitCard({ habit, state, info, streak, b
           );
         })}
       </div>
+      )}
     </article>
   );
 });
