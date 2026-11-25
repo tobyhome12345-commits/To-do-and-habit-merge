@@ -69,6 +69,19 @@ export function planHabitReminders(data: AppData, now: number, max = MAX_HABIT_R
   const out: PlannedHabitReminder[] = [];
   for (const h of state.habits) {
     if (!h.reminder || !h.notifId || (h.archivedAt && h.archivedAt <= today)) continue;
+    // One odd habit must never stop every other reminder from being scheduled.
+    try {
+      planHabit(h);
+    } catch (e) {
+      console.error('could not plan reminders for habit', h.id, e);
+    }
+  }
+  out.sort((a, b) => a.at - b.at);
+  return out.slice(0, max);
+
+  function planHabit(h: Habit) {
+    const time = h.reminder;
+    if (!time) return;
     let met: boolean | undefined;
     const thisWeekMet = () => {
       if (met === undefined) {
@@ -80,7 +93,7 @@ export function planHabitReminders(data: AppData, now: number, max = MAX_HABIT_R
     for (let i = 0; i < HORIZON_DAYS; i++) {
       const d = addDays(today, i);
       if (!dueOn(h, state, d, today, thisWeekMet)) continue;
-      let at = localEpoch(d, h.reminder);
+      let at = localEpoch(d, time);
       // Snoozed from the notification: today's reminder moves to the snooze time.
       if (d === today && h.snoozedUntil != null && h.snoozedUntil > now && toLocalDate(h.snoozedUntil) === today) at = h.snoozedUntil;
       if (at <= now) continue;
@@ -89,6 +102,4 @@ export function planHabitReminders(data: AppData, now: number, max = MAX_HABIT_R
       out.push({ kind: 'habit', id: habitNotificationId(h.notifId, epochDay(d)), at, habitId: h.id, date: d, title, body, fp: `${at}|${title}|${body}` });
     }
   }
-  out.sort((a, b) => a.at - b.at);
-  return out.slice(0, max);
 }

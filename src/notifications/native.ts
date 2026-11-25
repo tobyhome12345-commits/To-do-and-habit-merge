@@ -7,6 +7,7 @@ import { useUI } from '../data/ui';
 import { RESERVED_BASE, TEST_HABIT_ID, TEST_TASK_ID } from '../data/notifIds';
 import { countOn, ruleOn } from '../habits/lib/schedule';
 import { diffPlanned, planAll, type Planned } from './plan';
+import { askToRunInBackgroundOnce } from './reliability';
 
 /*
  * Real OS-scheduled reminders for tasks AND habits (Android AlarmManager via @capacitor/local-notifications).
@@ -22,7 +23,20 @@ const CHANNEL = { task: 'task-reminders', habit: 'habit-reminders' } as const;
 const ACTIONS = { task: 'TASK_REMINDER', habit: 'HABIT_REMINDER' } as const;
 const SMALL_ICON = 'ic_stat_tick';
 
-export type ReminderStatus = { platform: 'web' } | { platform: 'native'; permission: string; exact: string; scheduled: number };
+export type ReminderStatus =
+  | { platform: 'web' }
+  | { platform: 'native'; permission: string; exact: string; scheduled: number; lastError: string | null };
+
+/** The last thing that went wrong while handing reminders to Android (shown in Settings). */
+let lastError: string | null = null;
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Hand reminders to Android right now (e.g. as the app goes to the background), instead of waiting. */
+export function flushReminders(): Promise<void> {
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = null;
+  return syncReminders();
+}
 
 let initialised = false;
 
@@ -60,16 +74,26 @@ export async function initNotifications() {
 
   await LocalNotifications.addListener('localNotificationActionPerformed', onAction);
 
-  // Re-sync whenever anything that affects reminders changes.
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  // Re-sync whenever anything that affects reminders changes. Settings changes (like the all-day time)
+  // go straight away; edits are batched for a moment while you type, and flushed if the app is left.
   useData.subscribe((s, prev) => {
     const a = s.data;
     const b = prev.data;
     if (a.todo === b.todo && a.habits === b.habits && a.settings === b.settings) return;
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => void syncReminders(), 500);
+    if (syncTimer) clearTimeout(syncTimer);
+    if (a.todo === b.todo && a.habits === b.habits) {
+      syncTimer = null;
+      void syncReminders();
+    } else {
+      syncTimer = setTimeout(() => void flushReminders(), 300);
+    }
   });
   await App.addListener('resume', () => void syncReminders());
+  // Leaving the app (home button, switching apps, swiping it away): make sure Android has everything first.
+  await App.addListener('pause', () => void flushReminders());
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') void flushReminders();
+  });
   await syncReminders();
 }
 
@@ -97,6 +121,9 @@ async function canExact(): Promise<boolean> {
     return true; // older Android: always allowed
   }
 }
+
+const BATCH = 25;
+const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 160);
 
 let running: Promise<void> | null = null;
 let again = false;
@@ -126,8 +153,20 @@ export function syncReminders(): Promise<void> {
         const ours = notifications.filter((n) => n.id < RESERVED_BASE).map((n) => ({ id: n.id, extra: n.extra }));
         const { cancel, schedule } = diffPlanned(desired, ours);
         if (cancel.length) await LocalNotifications.cancel({ notifications: cancel.map((id) => ({ id })) });
-        if (schedule.length) await LocalNotifications.schedule({ notifications: schedule.map((p) => toNotification(p, exact)) });
+        // Soonest first, in small batches, so one problem can't stop every other reminder.
+        let failed: string | null = null;
+        for (let i = 0; i < schedule.length; i += BATCH) {
+          const batch = schedule.slice(i, i + BATCH);
+          try {
+            await LocalNotifications.schedule({ notifications: batch.map((p) => toNotification(p, exact)) });
+          } catch (e) {
+            failed = errorText(e);
+            console.error('scheduling a batch of reminders failed', e);
+          }
+        }
+        lastError = failed;
       } catch (e) {
+        lastError = errorText(e);
         console.error('syncReminders failed', e);
       }
     } while (again);
@@ -175,11 +214,15 @@ export async function requestReminderPermission(force = false): Promise<boolean>
   if (!isNative) return true;
   try {
     const cur = await LocalNotifications.checkPermissions();
-    if (cur.display === 'granted') return true;
+    if (cur.display === 'granted') {
+      if (!force) void askToRunInBackgroundOnce();
+      return true;
+    }
     if (cur.display === 'denied' && !force) return false;
     const res = await LocalNotifications.requestPermissions();
     const ok = res.display === 'granted';
     if (ok) void syncReminders();
+    if (ok && !force) void askToRunInBackgroundOnce();
     return ok;
   } catch {
     return false;
@@ -194,9 +237,17 @@ export async function getReminderStatus(): Promise<ReminderStatus> {
       LocalNotifications.checkExactNotificationSetting().catch(() => ({ exact_alarm: 'granted' })),
       LocalNotifications.getPending(),
     ]);
-    return { platform: 'native', permission: perm.display, exact: exact.exact_alarm, scheduled: pending.notifications.filter((n) => n.id < RESERVED_BASE).length };
+    // Android keeps reminders that already popped up in this list, so count only the ones still to come.
+    const now = Date.now();
+    const upcoming = pending.notifications.filter((n) => {
+      if (n.id >= RESERVED_BASE) return false;
+      const fp = (n.extra as { fp?: unknown } | undefined)?.fp;
+      const at = typeof fp === 'string' ? Number(fp.split('|')[0]) : NaN;
+      return Number.isFinite(at) && at > now;
+    }).length;
+    return { platform: 'native', permission: perm.display, exact: exact.exact_alarm, scheduled: upcoming, lastError };
   } catch {
-    return { platform: 'native', permission: 'unknown', exact: 'unknown', scheduled: 0 };
+    return { platform: 'native', permission: 'unknown', exact: 'unknown', scheduled: 0, lastError };
   }
 }
 

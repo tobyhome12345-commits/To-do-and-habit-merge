@@ -53,11 +53,16 @@ function bodyFor(t: Task, data: AppData, now: number): string {
 export function planReminders(data: AppData, now: number, max = MAX_SCHEDULED): PlannedReminder[] {
   const out: PlannedReminder[] = [];
   for (const t of data.todo.tasks) {
-    const at = fireTimeFor(t, data.settings);
-    if (at == null || at <= now) continue;
-    const title = `${t.emoji ? t.emoji + ' ' : ''}${t.title}`;
-    const body = bodyFor(t, data, now);
-    out.push({ id: t.notifId, at, taskId: t.id, title, body, fp: `${at}|${title}|${body}` });
+    // One odd task must never stop every other reminder from being scheduled.
+    try {
+      const at = fireTimeFor(t, data.settings);
+      if (at == null || at <= now || !Number.isFinite(at)) continue;
+      const title = `${t.emoji ? t.emoji + ' ' : ''}${t.title}`;
+      const body = bodyFor(t, data, now);
+      out.push({ id: t.notifId, at, taskId: t.id, title, body, fp: `${at}|${title}|${body}` });
+    } catch (e) {
+      console.error('could not plan the reminder for task', t.id, e);
+    }
   }
   out.sort((a, b) => a.at - b.at);
   return out.slice(0, max);

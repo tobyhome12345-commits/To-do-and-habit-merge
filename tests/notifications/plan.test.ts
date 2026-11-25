@@ -3,7 +3,7 @@ import { defaultData } from '../../src/data/defaults';
 import { applyHabitAction } from '../../src/data/store';
 import { HABIT_BASE, RESERVED_BASE, kindOfNotification } from '../../src/data/notifIds';
 import { HORIZON_DAYS, planHabitReminders } from '../../src/notifications/habitPlan';
-import { diffPlanned, planAll } from '../../src/notifications/plan';
+import { describeWhen, diffPlanned, nextAllDayReminder, planAll, upcomingReminders } from '../../src/notifications/plan';
 import { blankTask } from '../../src/todo/model/data';
 import { addDays, weekday } from '../../src/core/dates';
 import type { AppData } from '../../src/data/types';
@@ -113,5 +113,44 @@ describe('habits + tasks together', () => {
     const { cancel, schedule } = diffPlanned(after, pending);
     expect(cancel).toEqual([plan[0].id]);
     expect(schedule).toEqual([]);
+  });
+});
+
+describe('saying when reminders will fire', () => {
+  it('describes the day and time', () => {
+    expect(describeWhen(local(2026, 11, 25, 20, 11), NOW)).toBe('Today 8:11 PM');
+    expect(describeWhen(local(2026, 11, 26, 9, 0), NOW)).toBe('Tomorrow 9:00 AM');
+    expect(describeWhen(local(2026, 11, 28, 9, 0), NOW)).toBe('Sat 9:00 AM');
+    expect(describeWhen(local(2026, 12, 10, 9, 0), NOW)).toBe('Thu 10 Dec 9:00 AM');
+  });
+
+  it('the all-day time fires on the day the task is due, which may not be today', () => {
+    const base = defaultData(NOW);
+    const sat = blankTask({ id: 's', title: 'Learn something new', emoji: '🧠', notifId: 7, dueDate: '2026-11-28', reminder: 0 });
+    let d: AppData = { ...base, todo: { ...base.todo, tasks: [sat] }, settings: { ...base.settings, allDayReminderTime: '08:11' } };
+    expect(nextAllDayReminder(d, NOW)).toEqual({ title: '🧠 Learn something new', at: local(2026, 11, 28, 8, 11) });
+    const today = blankTask({ id: 't', title: 'Tidy desk', notifId: 8, dueDate: TODAY, reminder: 0 });
+    d = { ...d, todo: { ...d.todo, tasks: [sat, today] } };
+    expect(nextAllDayReminder(d, NOW)).toEqual({ title: 'Tidy desk', at: local(2026, 11, 25, 8, 11) });
+    // Tasks with a time don't use the all-day time.
+    const timed = blankTask({ id: 'x', title: 'Gym', notifId: 9, dueDate: TODAY, dueTime: '18:00', reminder: 0 });
+    expect(nextAllDayReminder({ ...d, todo: { ...d.todo, tasks: [timed] } }, NOW)).toBeNull();
+  });
+
+  it('lists the next few reminders, tasks and habits mixed, soonest first', () => {
+    let d = withHabit({ reminder: '19:00' });
+    d = { ...d, todo: { ...d.todo, tasks: [blankTask({ id: 'a', title: 'Essay', notifId: 50, dueDate: TODAY, dueTime: '12:00', reminder: 0 })] } };
+    expect(upcomingReminders(d, NOW, 3).map((p) => p.title)).toEqual(['Essay', '📚 Read', '📚 Read']);
+  });
+
+  it('one broken task or habit never stops the other reminders', () => {
+    let d = withHabit({ reminder: '19:00' });
+    const broken = { ...blankTask({ id: 'b', title: 'Broken', notifId: 60, dueDate: TODAY, reminder: 0 }), dueTime: 'nonsense' as string };
+    const ok = blankTask({ id: 'o', title: 'Fine', notifId: 61, dueDate: TODAY, dueTime: '12:00', reminder: 0 });
+    d = { ...d, todo: { ...d.todo, tasks: [broken, ok] } };
+    d = { ...d, habits: { ...d.habits, habits: [{ ...d.habits.habits[0], rules: [] as never }, ...d.habits.habits] } };
+    const titles = planAll(d, NOW).map((p) => p.title);
+    expect(titles).toContain('Fine');
+    expect(titles).toContain('📚 Read');
   });
 });

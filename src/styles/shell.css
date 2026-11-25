@@ -618,3 +618,22 @@ body.sheet-open {
 .reminder-time input {
   max-width: 150px;
 }
+
+/* Settings → Coming up */
+.row--top {
+  align-items: flex-start;
+}
+
+.row__sub.coming {
+  display: block;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row__sub.coming b {
+  color: var(--text);
+  font-weight: 700;
+  margin-right: 4px;
+}

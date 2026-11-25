@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { App as CapApp } from '@capacitor/app';
-import { Bell, BellRing, Calendar, CheckSquare, Download, Heart, History, ListTodo, Moon, Smartphone, Sparkles, Sprout, Timer, Trash2, Upload, Vibrate, Zap } from 'lucide-react';
+import { BatteryCharging, Bell, BellRing, Calendar, CalendarClock, CheckSquare, Download, Heart, History, ListTodo, Moon, Smartphone, Sparkles, Sprout, Timer, Trash2, Upload, Vibrate, Zap } from 'lucide-react';
 import { useData } from '../data/store';
 import { useUI } from '../data/ui';
 import { Header } from '../shared/Header';
@@ -15,6 +15,8 @@ import { exportBackup, pickBackupFile } from '../data/backupIO';
 import { PRE_IMPORT, getSafetyCopy, kv, saveNow } from '../data/persistence';
 import { migrate } from '../data/migrate';
 import { getReminderStatus, openExactAlarmSettings, requestReminderPermission, sendTestNotification, type ReminderStatus } from '../notifications/native';
+import { describeWhen, nextAllDayReminder, upcomingReminders } from '../notifications/plan';
+import { askToRunInBackground, getBatteryStatus, openAppSettings, type BatteryStatus } from '../notifications/reliability';
 import type { ThemeMode } from '../data/types';
 
 /*
@@ -46,10 +48,14 @@ export default function SettingsScreen() {
   const showSnack = useData((s) => s.showSnack);
   const openSheet = useUI((s) => s.openSheet);
   const [status, setStatus] = useState<ReminderStatus | null>(null);
+  const [battery, setBattery] = useState<BatteryStatus | null>(null);
   const [version, setVersion] = useState(__APP_VERSION__);
   const [safetyCopy, setSafetyCopy] = useState<string | null>(null);
 
-  const refreshStatus = () => void getReminderStatus().then(setStatus);
+  const refreshStatus = () => {
+    void getReminderStatus().then(setStatus);
+    void getBatteryStatus().then(setBattery);
+  };
   useEffect(() => {
     refreshStatus();
     const onVis = () => document.visibilityState === 'visible' && refreshStatus();
@@ -61,6 +67,18 @@ export default function SettingsScreen() {
     if (isNative) void CapApp.getInfo().then((i) => setVersion(i.version));
     void getSafetyCopy().then(setSafetyCopy);
   }, [data.meta]);
+
+  const now = Date.now();
+  const coming = upcomingReminders(data, now, 3);
+
+  /** Changing the all-day time: say when the next all-day reminder will actually pop up (maybe not today!). */
+  const setAllDayTime = (time: string) => {
+    if (!time) return;
+    update({ allDayReminderTime: time });
+    const next = nextAllDayReminder({ ...data, settings: { ...settings, allDayReminderTime: time } }, Date.now());
+    showSnack(next ? `Next all-day reminder: ${next.title}, ${describeWhen(next.at, Date.now())}` : 'No all-day tasks have a reminder coming up', undefined, '⏰');
+    void requestReminderPermission();
+  };
 
   const nHabits = data.habits.habits.filter((h) => !h.archivedAt).length;
   const open = data.todo.tasks.filter((t) => t.completedAt == null).length;
@@ -150,6 +168,23 @@ export default function SettingsScreen() {
           </div>
         </div>
       )}
+      {battery && !battery.ignoring && (
+        <div className="banner banner--warn">
+          <BatteryCharging size={20} />
+          <div>
+            <b>Make reminders reliable.</b> Let Doable run in the background, so your phone doesn't hold back reminders when Doable is closed or swiped away.
+            {battery.samsung && (
+              <>
+                {' '}
+                On Samsung, also check Settings → Battery → Background usage limits, and keep Doable out of <i>Sleeping apps</i>.
+              </>
+            )}
+            <button className="banner__btn" onClick={() => void askToRunInBackground().then(() => setTimeout(refreshStatus, 800))}>
+              Make reminders reliable
+            </button>
+          </div>
+        </div>
+      )}
       <div className="group">
         <Row icon={<Icon tone="leaf"><Sprout size={18} /></Icon>} label="Habit reminders" sub={withReminders ? `${withReminders} habit${withReminders === 1 ? '' : 's'} with a reminder time · set it in each habit` : 'Give a habit a reminder time in its edit sheet'}>
           <Toggle checked={settings.notify.habits} onChange={(v) => update({ notify: { ...settings.notify, habits: v } })} label="Habit reminders" />
@@ -186,18 +221,35 @@ export default function SettingsScreen() {
           </Icon>
           <span className="row__label">
             All-day tasks remind at
-            <span className="row__sub">When a task has a date but no time</span>
+            <span className="row__sub">For tasks with a date but no time, on the day they're due</span>
           </span>
           <label className="select-pill">
             {formatTime(settings.allDayReminderTime)}
-            <input type="time" value={settings.allDayReminderTime} onChange={(e) => e.target.value && update({ allDayReminderTime: e.target.value })} aria-label="All-day reminder time" />
+            <input type="time" value={settings.allDayReminderTime} onChange={(e) => setAllDayTime(e.target.value)} aria-label="All-day reminder time" />
           </label>
+        </div>
+        <div className="row row--top">
+          <Icon tone="leaf">
+            <CalendarClock size={18} />
+          </Icon>
+          <span className="row__label">
+            Coming up
+            {coming.length ? (
+              coming.map((p) => (
+                <span key={p.id} className="row__sub coming">
+                  <b>{describeWhen(p.at, now)}</b> {p.title}
+                </span>
+              ))
+            ) : (
+              <span className="row__sub">No reminders coming up. Give a task or habit a reminder.</span>
+            )}
+          </span>
         </div>
         {status?.platform === 'native' ? (
           <Row
             icon={<Icon tone="coral"><Zap size={18} /></Icon>}
             label="Send a test notification"
-            sub={`${status.scheduled} reminder${status.scheduled === 1 ? '' : 's'} scheduled · ${status.exact === 'granted' ? 'exact timing on' : 'may be slightly late'}`}
+            sub={`${status.scheduled} reminder${status.scheduled === 1 ? '' : 's'} waiting with Android · ${status.exact === 'granted' ? 'exact timing on' : 'may be slightly late'}${status.lastError ? ` · last problem: ${status.lastError}` : ''}`}
             onClick={async () => {
               const ok = await sendTestNotification();
               showSnack(ok ? 'Test notification coming in 5 seconds…' : 'Allow notifications first', undefined, ok ? '🔔' : '⚠️');
@@ -205,6 +257,14 @@ export default function SettingsScreen() {
           />
         ) : (
           <Row icon={<Icon tone="coral"><Smartphone size={18} /></Icon>} label="Reminders run in the Android app" sub="Real notifications at the right time, even when Doable is closed" />
+        )}
+        {battery?.ignoring && (
+          <Row
+            icon={<Icon tone="leaf"><BatteryCharging size={18} /></Icon>}
+            label="Runs in the background ✓"
+            sub="Reminders arrive even when Doable is closed. Tap for Doable's Android settings"
+            onClick={() => void openAppSettings()}
+          />
         )}
       </div>
 

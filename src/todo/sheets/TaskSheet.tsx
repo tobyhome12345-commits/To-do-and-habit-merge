@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell, CalendarDays, Check, Clock, Flag, ListChecks, Plus, Repeat as RepeatIcon, RotateCcw, Smile, Tag, Trash2, X } from 'lucide-react';
-import type { ID, Priority, Subtask, Task } from '../model/types';
+import type { ID, Priority, Settings, Subtask, Task } from '../model/types';
 import { INBOX_ID, REMINDER_OPTIONS } from '../model/types';
 import { useData } from '../../data/store';
 import { useUI } from '../../data/ui';
@@ -13,6 +13,8 @@ import { EmojiPicker } from '../components/EmojiPicker';
 import { RepeatEditor } from '../components/RepeatEditor';
 import { Checkbox } from '../components/Checkbox';
 import { requestReminderPermission } from '../../notifications/native';
+import { describeWhen } from '../../notifications/plan';
+import { fireTimeFor } from '../model/reminderPlan';
 import { haptic } from '../../core/haptics';
 import { toggleWithAnimation } from '../actions';
 
@@ -251,7 +253,7 @@ function TaskForm({ d, setD, existing }: { d: Draft; setD: React.Dispatch<React.
             </label>
             <label className={`field ${d.reminder != null ? 'field--set' : ''}`}>
               <Bell size={17} />
-              <span className="field__value">{reminderLabel(d.reminder, d.dueTime, settings.allDayReminderTime)}</span>
+              <span className="field__value">{reminderLabel(d, settings)}</span>
               <select
                 value={d.reminder == null ? '' : String(d.reminder)}
                 onChange={(e) => setReminder(e.target.value === '' ? null : Number(e.target.value))}
@@ -379,8 +381,11 @@ function autoGrow(el: HTMLTextAreaElement | null) {
   el.oninput = fit;
 }
 
-function reminderLabel(r: number | null, dueTime: string | null, allDay: string): string {
-  if (r == null) return 'No reminder';
-  if (r === 0) return dueTime ? 'On time' : `At ${formatTime(allDay)}`;
-  return REMINDER_OPTIONS.find((o) => o.value === r)?.label ?? `${r} min before`;
+/** Says exactly when the reminder will pop up, e.g. "Today 8:11 PM" or "Sat 9:00 AM" (all-day tasks remind on their due day). */
+function reminderLabel(d: Draft, settings: Settings): string {
+  if (d.reminder == null) return 'No reminder';
+  const now = Date.now();
+  const at = fireTimeFor({ ...d, completedAt: null, snoozedUntil: null } as Task, settings);
+  if (at == null) return 'No reminder';
+  return at <= now ? `${describeWhen(at, now)} (passed)` : describeWhen(at, now);
 }

@@ -36,6 +36,10 @@
     <!-- Habit + task reminders: show notifications (Android 13+ asks the user), ring on the exact minute, survive reboots -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Android 12 doesn't know USE_EXACT_ALARM yet; this one gives it exact alarms -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <!-- Lets Doable ask to be left out of battery optimization, so phones don't hold back reminders -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
