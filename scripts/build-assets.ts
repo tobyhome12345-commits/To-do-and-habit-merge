@@ -111,6 +111,17 @@ async function main() {
   console.log('Running @capacitor/assets…');
   execSync('npx capacitor-assets generate --android', { cwd: ROOT, stdio: 'ignore' });
 
+  // ---- iPhone (the Swift app in ios/): the same icon + light/dark splash. Apple refuses app icons
+  // with an alpha channel, so the 1024² icon is flattened onto paper.
+  const XCASSETS = join(ROOT, 'ios/App/App/Assets.xcassets');
+  if (existsSync(XCASSETS)) {
+    execSync('npx capacitor-assets generate --ios', { cwd: ROOT, stdio: 'ignore' });
+    const icon = join(XCASSETS, 'AppIcon.appiconset/AppIcon-512@2x.png');
+    const flat = await sharp(join(ROOT, 'assets/icon-only.png')).flatten({ background: PAPER }).removeAlpha().png().toBuffer();
+    writeFileSync(icon, flat);
+    console.log('  wrote iOS icon + splash');
+  }
+
   // ---- Adaptive layers at their true size. The XML insets each layer by 16.7%, so the image
   // fills the 72dp visible area: 72dp × density (sharper than the tool's default sizes).
   const DENSITY: Record<string, number> = { ldpi: 0.75, mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };

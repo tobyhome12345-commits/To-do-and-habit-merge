@@ -9,7 +9,9 @@ name: Build Android APK
 
 on:
   push:
-    branches: ['**']
+    # Only Toby's main branch publishes the Android app. The swift-ios copy has its own workflow (ios.yml)
+    # and must never publish here, or it would take over the stable "latest" Doable.apk link.
+    branches: ['ccr-8af6970f-tlntt3']
     paths-ignore:
       - '**.md'
       - 'docs/**'

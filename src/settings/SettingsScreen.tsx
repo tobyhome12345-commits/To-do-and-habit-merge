@@ -10,7 +10,7 @@ import { AccentPicker } from './AccentPicker';
 import { HabitSettings } from './HabitSettings';
 import { REMINDER_OPTIONS } from '../todo/model/types';
 import { formatTime } from '../core/dates';
-import { isNative } from '../core/platform';
+import { isIOS, isNative, osName } from '../core/platform';
 import { exportBackup, pickBackupFile } from '../data/backupIO';
 import { PRE_IMPORT, getSafetyCopy, kv, saveNow } from '../data/persistence';
 import { migrate } from '../data/migrate';
@@ -149,7 +149,7 @@ export default function SettingsScreen() {
               onClick={async () => {
                 const ok = await requestReminderPermission(true);
                 refreshStatus();
-                if (!ok) showSnack('Turn them on in Android Settings → Apps → Doable → Notifications', undefined, '⚙️');
+                if (!ok) showSnack(isIOS ? 'Turn them on in iPhone Settings → Doable → Notifications' : 'Turn them on in Android Settings → Apps → Doable → Notifications', undefined, '⚙️');
               }}
             >
               Allow notifications
@@ -249,20 +249,20 @@ export default function SettingsScreen() {
           <Row
             icon={<Icon tone="coral"><Zap size={18} /></Icon>}
             label="Send a test notification"
-            sub={`${status.scheduled} reminder${status.scheduled === 1 ? '' : 's'} waiting with Android · ${status.exact === 'granted' ? 'exact timing on' : 'may be slightly late'}${status.lastError ? ` · last problem: ${status.lastError}` : ''}`}
+            sub={`${status.scheduled} reminder${status.scheduled === 1 ? '' : 's'} waiting with ${osName} · ${status.exact === 'granted' ? 'exact timing on' : 'may be slightly late'}${status.lastError ? ` · last problem: ${status.lastError}` : ''}`}
             onClick={async () => {
               const ok = await sendTestNotification();
               showSnack(ok ? 'Test notification coming in 5 seconds…' : 'Allow notifications first', undefined, ok ? '🔔' : '⚠️');
             }}
           />
         ) : (
-          <Row icon={<Icon tone="coral"><Smartphone size={18} /></Icon>} label="Reminders run in the Android app" sub="Real notifications at the right time, even when Doable is closed" />
+          <Row icon={<Icon tone="coral"><Smartphone size={18} /></Icon>} label="Reminders run in the phone app" sub="Real notifications at the right time, even when Doable is closed" />
         )}
         {battery?.ignoring && (
           <Row
             icon={<Icon tone="leaf"><BatteryCharging size={18} /></Icon>}
             label="Runs in the background ✓"
-            sub="Reminders arrive even when Doable is closed. Tap for Doable's Android settings"
+            sub={`Reminders arrive even when Doable is closed. Tap for Doable's ${isIOS ? 'iPhone' : 'Android'} settings`}
             onClick={() => void openAppSettings()}
           />
         )}

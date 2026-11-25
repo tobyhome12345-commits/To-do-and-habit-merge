@@ -1,6 +1,6 @@
 import { LocalNotifications, type ActionPerformed, type LocalNotificationSchema } from '@capacitor/local-notifications';
 import { App } from '@capacitor/app';
-import { isNative } from '../core/platform';
+import { isAndroid, isIOS, isNative } from '../core/platform';
 import { todayKey } from '../core/dates';
 import { useData } from '../data/store';
 import { useUI } from '../data/ui';
@@ -43,25 +43,33 @@ let initialised = false;
 export async function initNotifications() {
   if (!isNative || initialised) return;
   initialised = true;
+  // Notification channels are Android-only (iOS has none, and the call fails there).
+  if (isAndroid) {
+    try {
+      await LocalNotifications.createChannel({
+        id: CHANNEL.task,
+        name: 'Task reminders',
+        description: 'Reminders at the time your tasks are due',
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#F5A524',
+      });
+      await LocalNotifications.createChannel({
+        id: CHANNEL.habit,
+        name: 'Habit reminders',
+        description: 'Tick’s daily nudges for your habits',
+        importance: 4,
+        visibility: 1,
+        vibration: true,
+      });
+    } catch (e) {
+      console.error('reminder channels failed', e);
+    }
+  }
+  // Set up separately from the channels, so the ✓ Done / Snooze buttons always exist (on iPhone too).
   try {
-    await LocalNotifications.createChannel({
-      id: CHANNEL.task,
-      name: 'Task reminders',
-      description: 'Reminders at the time your tasks are due',
-      importance: 5,
-      visibility: 1,
-      vibration: true,
-      lights: true,
-      lightColor: '#F5A524',
-    });
-    await LocalNotifications.createChannel({
-      id: CHANNEL.habit,
-      name: 'Habit reminders',
-      description: 'Tick’s daily nudges for your habits',
-      importance: 4,
-      visibility: 1,
-      vibration: true,
-    });
     await LocalNotifications.registerActionTypes({
       types: [
         { id: ACTIONS.task, actions: [{ id: 'done', title: '✓ Done' }, { id: 'snooze', title: 'Snooze 10 min' }] },
@@ -69,7 +77,7 @@ export async function initNotifications() {
       ],
     });
   } catch (e) {
-    console.error('reminder setup failed', e);
+    console.error('reminder buttons failed', e);
   }
 
   await LocalNotifications.addListener('localNotificationActionPerformed', onAction);
@@ -123,6 +131,8 @@ async function canExact(): Promise<boolean> {
 }
 
 const BATCH = 25;
+/** iOS holds at most 64 pending notifications; a few stay free for the test notifications. */
+const IOS_MAX_PENDING = 60;
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 160);
 
 let running: Promise<void> | null = null;
@@ -140,7 +150,10 @@ export function syncReminders(): Promise<void> {
     do {
       again = false;
       try {
-        const desired = planAll(useData.getState().data, Date.now());
+        // iOS keeps at most 64 pending notifications: hand it the soonest ones (planAll is soonest-first,
+        // and it re-plans on every change, start and resume, so later ones fill in as these fire).
+        const all = planAll(useData.getState().data, Date.now());
+        const desired = isIOS ? all.slice(0, IOS_MAX_PENDING) : all;
         let perm = await LocalNotifications.checkPermissions();
         // First reminder that needs showing (from a sheet, quick-add or an import): ask once per session.
         if (perm.display !== 'granted' && perm.display !== 'denied' && desired.length && !askedThisSession) {

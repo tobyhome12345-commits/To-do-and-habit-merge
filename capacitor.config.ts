@@ -9,6 +9,11 @@ const config: CapacitorConfig = {
   android: {
     backgroundColor: '#FBF6EE',
   },
+  // iPhone: the native Swift shell (ios/App) shows the same app. Safe areas come from env(safe-area-inset-*).
+  ios: {
+    backgroundColor: '#FBF6EE',
+    contentInset: 'never',
+  },
   plugins: {
     SystemBars: {
       // Injects --safe-area-inset-* CSS variables so content never hides under the status/nav bars.
@@ -19,6 +24,10 @@ const config: CapacitorConfig = {
       launchShowDuration: 600,
       launchAutoHide: true,
       showSpinner: false,
+    },
+    Keyboard: {
+      // iPhone: shrink the app above the keyboard (like Android does), so sheets and inputs stay visible.
+      resize: 'native',
     },
     LocalNotifications: {
       smallIcon: 'ic_stat_tick',
