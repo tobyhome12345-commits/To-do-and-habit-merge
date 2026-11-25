@@ -63,11 +63,12 @@ export function planReminders(data: AppData, now: number, max = MAX_SCHEDULED): 
   return out.slice(0, max);
 }
 
-export function diffReminders(desired: PlannedReminder[], pending: PendingLike[]) {
+/** What to cancel and what to (re)schedule so Android's pending list matches `desired` (tasks and habits). */
+export function diffReminders<T extends { id: number; fp: string }>(desired: T[], pending: PendingLike[]) {
   const pend = new Map(pending.map((p) => [p.id, p]));
   const want = new Map(desired.map((d) => [d.id, d]));
   const cancel: number[] = [];
-  const schedule: PlannedReminder[] = [];
+  const schedule: T[] = [];
   for (const p of pending) {
     const d = want.get(p.id);
     if (!d || p.extra?.fp !== d.fp) cancel.push(p.id);

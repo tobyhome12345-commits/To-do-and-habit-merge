@@ -510,3 +510,84 @@ body.sheet-open {
   font-weight: 600;
   padding: 6px 20px 2px;
 }
+
+/* ---------- Settings page ---------- */
+.settings-page .section-title {
+  margin-top: 26px;
+}
+
+.settings-page .opt-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+}
+
+.settings-page .field-label {
+  margin: 16px 6px 8px;
+}
+
+.row__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.row__label {
+  font-weight: 700;
+}
+
+.seg__opt {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.seg__opt--on {
+  background: var(--seg-active);
+}
+
+.banner {
+  border-radius: 18px;
+}
+
+.sheet__text {
+  color: var(--text-2);
+  font-size: 14.5px;
+  margin: 8px 2px 16px;
+}
+
+.stack {
+  display: grid;
+  gap: 10px;
+}
+
+.reset-opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  text-align: left;
+}
+
+.reset-opt b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.reset-opt small {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.reset-opt.armed {
+  background: var(--danger);
+  color: #fff;
+}
+
+.reset-opt.armed small {
+  color: rgba(255, 255, 255, 0.85);
+}

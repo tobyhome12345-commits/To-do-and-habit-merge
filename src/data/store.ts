@@ -4,8 +4,9 @@ import { INBOX_ID } from '../todo/model/types';
 import { blankTask, uid } from '../todo/model/data';
 import { nextOccurrence } from '../todo/model/recurrence';
 import { relativeDay, todayStr } from '../core/dates';
-import { reducer as habitReducer, type Action as HabitAction } from '../habits/lib/reducer';
+import type { Action as HabitAction } from '../habits/lib/reducer';
 import type { HabitState } from '../habits/lib/types';
+import { applyHabitAction, habitView } from './habitView';
 import { defaultData } from './defaults';
 import { assignNotifIds } from './notifIds';
 import type { AppData, Settings } from './types';
@@ -19,6 +20,7 @@ import type { AppData, Settings } from './types';
  */
 
 export type { HabitAction };
+export { applyHabitAction, habitView, withHabitState } from './habitView';
 
 export interface UndoEntry {
   id: number;
@@ -67,6 +69,8 @@ export interface DataState {
 
   /* habits */
   habit(action: HabitAction): void;
+  /** Move today's reminder for a habit `minutes` from now (notification Snooze button). */
+  snoozeHabit(id: string, minutes: number): void;
 
   /* tasks */
   addTask(p: Partial<Task>, opts?: { position?: 'top' | 'bottom'; silent?: boolean }): Task;
@@ -92,40 +96,6 @@ export interface DataState {
   undo(entryId?: number): void;
   showSnack(text: string, undoId?: number, emoji?: string, actions?: SnackAction[]): void;
   dismissSnack(): void;
-}
-
-/* ---------------- habit adapter ---------------- */
-
-let viewCache: { habits: AppData['habits']; weekStart: 0 | 1; view: HabitState } | null = null;
-
-/**
- * The habit code's view of the data: { habits, completions, notes, settings: { weekStart, vacations } }.
- * Memoised, so it returns the SAME object until habits or the week start change (keeps React fast).
- */
-export function habitView(data: AppData): HabitState {
-  const h = data.habits;
-  const weekStart = data.settings.weekStart;
-  if (viewCache && viewCache.habits === h && viewCache.weekStart === weekStart) return viewCache.view;
-  const view: HabitState = { habits: h.habits, completions: h.completions, notes: h.notes, settings: { weekStart, vacations: h.vacations } };
-  viewCache = { habits: h, weekStart, view };
-  return view;
-}
-
-/** Write a habit-code state back into the document (and give new habits a notification number). */
-export function withHabitState(data: AppData, s: HabitState): AppData {
-  const next: AppData = {
-    ...data,
-    habits: { habits: s.habits, completions: s.completions, notes: s.notes, vacations: s.settings.vacations },
-    settings: s.settings.weekStart === data.settings.weekStart ? data.settings : { ...data.settings, weekStart: s.settings.weekStart },
-  };
-  return next.habits.habits.some((h) => !h.notifId) ? assignNotifIds(next) : next;
-}
-
-/** Apply one habit action to the document (pure; used by the store and the tests). */
-export function applyHabitAction(data: AppData, action: HabitAction): AppData {
-  const view = habitView(data);
-  const after = habitReducer(view, action);
-  return after === view ? data : withHabitState(data, after);
 }
 
 let undoSeq = 1;
@@ -196,6 +166,12 @@ export const useData = create<DataState>((set, get) => {
       const data = get().data;
       const next = applyHabitAction(data, action);
       if (next !== data) set({ data: next });
+    },
+
+    snoozeHabit(id, minutes) {
+      const data = get().data;
+      const until = Date.now() + minutes * 60_000;
+      set({ data: { ...data, habits: { ...data.habits, habits: data.habits.habits.map((h) => (h.id === id ? { ...h, snoozedUntil: until } : h)) } } });
     },
 
     addTask(p, opts = {}) {
