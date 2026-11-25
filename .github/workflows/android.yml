@@ -1,6 +1,7 @@
-# Builds a signed Tickday APK on every push and publishes it to GitHub Releases.
+# Builds a signed Doable APK on every push and publishes it to GitHub Releases.
+# (The app was first released as "Tickday"; Doable installs as an update over it.)
 # Stable download link (always the newest build):
-#   https://github.com/tobyhome12345-commits/To-do-and-habit-merge/releases/latest/download/Tickday.apk
+#   https://github.com/tobyhome12345-commits/To-do-and-habit-merge/releases/latest/download/Doable.apk
 #
 # ⚠️ Don't rename this file: the build number (github.run_number) is the Android versionCode,
 #    and it restarts from 1 if the workflow is renamed, so updates would refuse to install.
@@ -69,28 +70,28 @@ jobs:
         run: |
           BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
           "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs android/app/build/outputs/apk/release/app-release.apk
-          cp android/app/build/outputs/apk/release/app-release.apk Tickday.apk
-          ls -la Tickday.apk
+          cp android/app/build/outputs/apk/release/app-release.apk Doable.apk
+          ls -la Doable.apk
 
       - name: Upload APK as a build artifact
         uses: actions/upload-artifact@v7
         with:
-          name: Tickday-${{ env.VERSION_NAME }}
-          path: Tickday.apk
+          name: Doable-${{ env.VERSION_NAME }}
+          path: Doable.apk
           if-no-files-found: error
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ env.VERSION_NAME }}
-          name: Tickday ${{ env.VERSION_NAME }}
+          name: Doable ${{ env.VERSION_NAME }}
           target_commitish: ${{ github.sha }}
           make_latest: 'true'
           fail_on_unmatched_files: true
-          files: Tickday.apk
+          files: Doable.apk
           body: |
             📲 **Install on your Android phone:** open this link in Chrome, download, then tap the file to install:
-            https://github.com/${{ github.repository }}/releases/latest/download/Tickday.apk
+            https://github.com/${{ github.repository }}/releases/latest/download/Doable.apk
 
             Version ${{ env.VERSION_NAME }} (build ${{ github.run_number }}) from commit ${{ github.sha }}.
-            Installs over the previous Tickday and keeps all your habits and tasks. It installs next to the old Habit Tracker and Doable apps, not over them.
+            Installs over the previous version (including the app when it was called Tickday) and keeps all your habits and tasks.

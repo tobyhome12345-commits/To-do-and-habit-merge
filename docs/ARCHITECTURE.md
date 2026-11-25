@@ -1,9 +1,9 @@
-# Tickday architecture
+# Doable architecture
 
-Tickday merges two apps that were already built the same way (React + TypeScript + Vite + Capacitor 8):
+Doable (first released as "Tickday") merges two apps that were already built the same way (React + TypeScript + Vite + Capacitor 8):
 
 - **Habit Tracker** (`Habit-Tracker-App`, tag `v1.0.7`): the "Garden notebook" design, Tick, schedules, streaks, calendar, stats.
-- **Doable** (`To-do-game`): lists, repeating tasks, smart views, quick-add, undo and a reminder engine that works.
+- **the old to-do app, Doable v1** (`To-do-game`): lists, repeating tasks, smart views, quick-add, undo and a reminder engine that works.
 
 The code from both was moved in, not rewritten. Anything duplicated now has a single shared copy.
 
@@ -46,9 +46,9 @@ AppData = {
 }
 ```
 
-It's stored as one JSON string in Android's private app storage (Capacitor Preferences), using Doable's crash-safe persistence: a debounced autosave, an immediate save when the app goes to the background, a "last good" copy that's used if the main copy can't be read, and a safety copy before every import or reset.
+It's stored as one JSON string (key `doable.data`) in Android's private app storage (Capacitor Preferences). On the first start after the update from Tickday, the data is moved from the old `tickday.data` key, which is kept as a safety net, using Doable's crash-safe persistence: a debounced autosave, an immediate save when the app goes to the background, a "last good" copy that's used if the main copy can't be read, and a safety copy before every import or reset.
 
-**Migrations** (`data/migrate.ts`): `MIGRATIONS[n]` turns a version-n document into n+1, so older saves and backups are upgraded one step at a time. A file from a *newer* Tickday is refused with a friendly message. Each half is then cleaned by the old app's own validation code (`normalizeState` for habits, `cleanTodo` for tasks), so the repairs both apps already did still happen.
+**Migrations** (`data/migrate.ts`): `MIGRATIONS[n]` turns a version-n document into n+1, so older saves and backups are upgraded one step at a time. A file from a *newer* Doable is refused with a friendly message. Each half is then cleaned by the old app's own validation code (`normalizeState` for habits, `cleanTodo` for tasks), so the repairs both apps already did still happen.
 
 **One store** (`data/store.ts`, Zustand):
 - Task actions are Doable's `transact()` functions, including the precise undo stack.
@@ -57,11 +57,11 @@ It's stored as one JSON string in Android's private app storage (Capacitor Prefe
 
 ## Backups
 
-- **Export:** one file, `{ app: 'Tickday', format: 1, version, exportedAt, appVersion, data }`, through the share sheet (phone) or as a download (browser).
+- **Export:** one file, `{ app: 'Doable', format: 2, version, exportedAt, appVersion, data }`, through the share sheet (phone) or as a download (browser).
 - **Import** (`detect()`) recognises:
-  - Tickday backups, whether wrapped in that envelope or bare;
-  - Doable backups (`{ app: 'Doable', format: 1, data }` or bare Doable data);
-  - Habit Tracker backups (`{ app: 'habit-tracker', version: 1 | 2, … }`). For v1 files, the old per-habit reminder becomes a Tickday reminder time.
+  - Doable backups, and files saved while the app was called Tickday (`{ app: 'Tickday', format: 1, … }`);
+  - the old to-do app's backups (`{ app: 'Doable', format: 1, data: { tasks, lists } }` or bare data). They're told apart from new Doable files by their shape: a whole document has `habits` and `todo` halves;
+  - Habit Tracker backups (`{ app: 'habit-tracker', version: 1 | 2, … }`). For v1 files, the old per-habit reminder becomes a Doable reminder time.
 - **Merge or replace** (`applyImport`): an old single-app file only touches its own half and never changes the theme or accent.
   - Tasks merge Doable's way: matched by id, and the newest edit wins.
   - Habits are matched by id. Each day keeps the higher count, your notes win (the backup's fill the gaps), new habits are added, and vacations are combined.
@@ -92,6 +92,6 @@ The Habit Tracker's "Garden notebook" design system (`styles/global.css`) is the
 
 `.github/workflows/android.yml` runs on every push:
 
-`npm ci` → `npm test` → `npm run build` → `npx cap sync android` → `gradlew assembleRelease` (versionCode = run number) → `apksigner verify` → GitHub Release `v1.0.N` with `Tickday.apk`, marked latest.
+`npm ci` → `npm test` → `npm run build` → `npx cap sync android` → `gradlew assembleRelease` (versionCode = run number) → `apksigner verify` → GitHub Release `v1.0.N` with `Doable.apk`, marked latest.
 
-The release key (`android/app/tickday-release.jks` + `android/keystore.properties`) is committed so every build has the same signature.
+The release key (`android/app/tickday-release.jks` + `android/keystore.properties`) is committed so every build has the same signature. The app id stays `com.tickday.app` from the Tickday releases: with the same id and key, Doable installs as an update over Tickday and keeps its data. The Java namespace is `com.doable.tick`.
